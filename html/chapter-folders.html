@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Laravel Folder Guide | Laravel Mastery</title>
+
+<link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <style>
+    /* ── Folder Explorer Styles ── */
+    .folder-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+      position: sticky;
+      top: 72px;
+      z-index: 50;
+      background: rgba(10,10,15,0.9);
+      backdrop-filter: blur(16px);
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .ftab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .ftab:hover { border-color: rgba(255,255,255,0.15); color: var(--text-primary); transform: translateY(-2px); }
+    .ftab.active { color: white; border-color: transparent; }
+    .ftab--resources.active { background: linear-gradient(135deg,#a855f7,#6d28d9); box-shadow: 0 6px 24px rgba(168,85,247,0.3); }
+    .ftab--public.active    { background: linear-gradient(135deg,#0ea5e9,#0284c7); box-shadow: 0 6px 24px rgba(14,165,233,0.3); }
+    .ftab--database.active  { background: linear-gradient(135deg,#10b981,#059669); box-shadow: 0 6px 24px rgba(16,185,129,0.3); }
+    .ftab--config.active    { background: linear-gradient(135deg,#f59e0b,#d97706); box-shadow: 0 6px 24px rgba(245,158,11,0.3); }
+    .ftab--app.active       { background: linear-gradient(135deg,#ef4444,#dc2626); box-shadow: 0 6px 24px rgba(239,68,68,0.3); }
+
+    /* folder panel */
+    .folder-panel { display: none; opacity: 1; }
+    .folder-panel.active { display: block; animation: fadeInUp 0.4s ease forwards; }
+
+    /* folder hero banner */
+    .folder-banner {
+      border-radius: var(--radius-lg);
+      padding: 36px 40px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .folder-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.08;
+    }
+    .folder-banner--resources { background: linear-gradient(135deg,rgba(168,85,247,0.15),rgba(109,40,217,0.08)); border: 1px solid rgba(168,85,247,0.2); }
+    .folder-banner--public    { background: linear-gradient(135deg,rgba(14,165,233,0.15),rgba(2,132,199,0.08)); border: 1px solid rgba(14,165,233,0.2); }
+    .folder-banner--database  { background: linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.08)); border: 1px solid rgba(16,185,129,0.2); }
+    .folder-banner--config    { background: linear-gradient(135deg,rgba(245,158,11,0.15),rgba(217,119,6,0.08)); border: 1px solid rgba(245,158,11,0.2); }
+    .folder-banner--app       { background: linear-gradient(135deg,rgba(239,68,68,0.15),rgba(220,38,38,0.08)); border: 1px solid rgba(239,68,68,0.2); }
+
+    .folder-banner__path {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      margin-bottom: 10px;
+    }
+    .folder-banner--resources .folder-banner__path { color: #a855f7; }
+    .folder-banner--public    .folder-banner__path { color: #0ea5e9; }
+    .folder-banner--database  .folder-banner__path { color: #10b981; }
+    .folder-banner--config    .folder-banner__path { color: #f59e0b; }
+    .folder-banner--app       .folder-banner__path { color: #ef4444; }
+
+    .folder-banner__title {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .folder-banner__desc { color: var(--text-secondary); font-size: 0.95rem; max-width: 600px; line-height: 1.7; }
+
+    /* sub-folder cards */
+    .subfolder-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 28px 0;
+    }
+    .subfolder-card {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .subfolder-card:hover { background: var(--bg-card-hover); transform: translateY(-3px); border-color: rgba(255,255,255,0.1); }
+    .subfolder-card__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+    .subfolder-card__icon { font-size: 1.1rem; }
+    .subfolder-card__name {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+    .subfolder-card__body { padding: 14px 18px; }
+    .subfolder-card__desc { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 10px; }
+    .subfolder-card__files {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .subfolder-card__files li {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding-left: 14px;
+      position: relative;
+    }
+    .subfolder-card__files li::before { content: '·'; position: absolute; left: 4px; }
+    .subfolder-card__files li span { color: var(--accent-green); }
+
+    /* what-goes-here rule blocks */
+    .rule-block {
+      display: flex;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      background: var(--bg-card);
+      transition: var(--transition);
+    }
+    .rule-block:hover { background: var(--bg-card-hover); }
+    .rule-block__icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+    .rule-block__title { font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
+    .rule-block__desc { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.6; }
+    .rule-block__example { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-green); margin-top: 6px; }
+
+    /* section h3 */
+    .section-h3 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 32px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-h3::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    @media (max-width: 700px) {
+      .folder-tabs { top: 60px; gap: 6px; }
+      .ftab { padding: 8px 12px; font-size: 0.72rem; }
+      .folder-banner { padding: 24px 20px; }
+      .folder-banner__title { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </a>
+    <div class="nav__links">
+      <a href="chapter1.html">Setup</a>
+      <a href="chapter-folders.html" style="color:var(--accent-red)">Folders</a>
+      <a href="chapter2.html">Database</a>
+      <a href="chapter3.html">Auth</a>
+      <a href="chapter-guest-auth.html">Guest/Auth</a>
+      <a href="chapter4.html">E-Com</a>
+      <a href="chapter5.html">Deploy</a>
+    </div>
+    <a href="../index.html" class="nav__badge" title="Back to Home — Folders"><span class="nav__badge-num">Extra</span> · Folders</a>
+  </nav>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="chapter-page">
+
+    <!-- HERO -->
+    <div class="chapter-hero">
+      <p class="chapter-hero__num">// FOLDER DEEP DIVE</p>
+      <h1 class="chapter-hero__title">Laravel Project Folders<br><span style="background:linear-gradient(135deg,var(--accent-red),var(--accent-orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Explained</span></h1>
+      <p class="chapter-hero__desc">
+        Every file you write in Laravel belongs somewhere specific. This guide walks through
+        the five most important folders — <strong>resources</strong>, <strong>public</strong>,
+        <strong>database</strong>, <strong>config</strong>, and <strong>app</strong> —
+        with real examples, file naming rules, and what goes where.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <span class="badge" style="background:rgba(168,85,247,0.15);color:#a855f7;border:1px solid rgba(168,85,247,0.3);">📁 resources/</span>
+        <span class="badge" style="background:rgba(14,165,233,0.15);color:#0ea5e9;border:1px solid rgba(14,165,233,0.3);">📁 public/</span>
+        <span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);">📁 database/</span>
+        <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">📁 config/</span>
+        <span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.25);">📁 app/</span>
+      </div>
+    </div>
+
+    <!-- STICKY FOLDER TABS -->
+    <div class="folder-tabs">
+      <button class="ftab ftab--resources active" data-panel="resources">📁 resources/</button>
+      <button class="ftab ftab--public"    data-panel="public">📁 public/</button>
+      <button class="ftab ftab--database"  data-panel="database">📁 database/</button>
+      <button class="ftab ftab--config"    data-panel="config">📁 config/</button>
+      <button class="ftab ftab--app"       data-panel="app">📁 app/</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PANEL: resources/                                       -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="folder-panel active" id="panel-resources">
+
+      <div class="folder-banner folder-banner--resources reveal">
+        <div class="folder-banner__path">📁 /resources</div>
+        <h2 class="folder-banner__title">resources/</h2>
+        <p class="folder-banner__desc">
+          Everything the user sees lives here. Blade templates, CSS, JavaScript, and translation files.
+          This is where you write your frontend code before it gets compiled or served.
+        </p>
+      </div>
+
+      <h3 class="section-h3">📂 Sub-folders</h3>
+      <div class="subfolder-grid">
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🎨</span>
+            <span class="subfolder-card__name">resources/views/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">All your Blade template files. This is where HTML lives in Laravel. Every page, component, and layout is a <code>.blade.php</code> file here.</p>
+            <ul class="subfolder-card__files">
+              <li>layouts/<span>app.blade.php</span></li>
+              <li>layouts/<span>guest.blade.php</span></li>
+              <li>products/<span>index.blade.php</span></li>
+              <li>products/<span>show.blade.php</span></li>
+              <li>cart/<span>index.blade.php</span></li>
+              <li>auth/<span>login.blade.php</span></li>
+              <li>components/<span>nav.blade.php</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">⚡</span>
+            <span class="subfolder-card__name">resources/js/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">JavaScript source files. Write your JS here, Vite (Laravel 12) or Mix (Laravel 8) bundles it into <code>public/build/</code>.</p>
+            <ul class="subfolder-card__files">
+              <li><span>app.js</span> — main entry point</li>
+              <li><span>bootstrap.js</span> — Axios, Echo setup</li>
+              <li><span>cart.js</span> — AJAX cart logic</li>
+              <li><span>search.js</span> — live search</li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🎨</span>
+            <span class="subfolder-card__name">resources/css/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">CSS / SCSS source files. Vite compiles these into <code>public/build/assets/</code>. With Tailwind, this file is mostly just <code>@tailwind</code> directives.</p>
+            <ul class="subfolder-card__files">
+              <li><span>app.css</span> — main stylesheet</li>
+              <li><span>admin.css</span> — admin overrides</li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🌍</span>
+            <span class="subfolder-card__name">resources/lang/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Translation files for multi-language support. Return arrays of strings keyed by identifier.</p>
+            <ul class="subfolder-card__files">
+              <li>en/<span>messages.php</span></li>
+              <li>en/<span>validation.php</span></li>
+              <li>fil/<span>messages.php</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-h3">📄 Blade Template Rules</h3>
+
+      <div class="rule-block reveal">
+        <div class="rule-block__icon">📐</div>
+        <div>
+          <div class="rule-block__title">Always use a layout file</div>
+          <div class="rule-block__desc">Put repeated HTML (nav, footer, head tags) in a layout and extend it from every page. Never repeat the same HTML in two places.</div>
+          <div class="rule-block__example">resources/views/layouts/app.blade.php</div>
+        </div>
+      </div>
+      <div class="rule-block reveal">
+        <div class="rule-block__icon">🧩</div>
+        <div>
+          <div class="rule-block__title">Use components for reusable UI pieces</div>
+          <div class="rule-block__desc">Product cards, alert banners, buttons — anything you use more than once should be a Blade component in <code>resources/views/components/</code>.</div>
+          <div class="rule-block__example">resources/views/components/product-card.blade.php → &lt;x-product-card /&gt;</div>
+        </div>
+      </div>
+      <div class="rule-block reveal">
+        <div class="rule-block__icon">📂</div>
+        <div>
+          <div class="rule-block__title">Mirror your routes in your view folders</div>
+          <div class="rule-block__desc">If a route is <code>/products/show</code>, its view should be at <code>resources/views/products/show.blade.php</code>. Keeps things predictable.</div>
+          <div class="rule-block__example">Route /admin/orders → resources/views/admin/orders/index.blade.php</div>
+        </div>
+      </div>
+
+      <h3 class="section-h3">💻 Code Examples</h3>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">resources/views/layouts/app.blade.php</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="tag-hl">&lt;!DOCTYPE html&gt;</span>
+<span class="tag-hl">&lt;html&gt;</span>
+<span class="tag-hl">&lt;head&gt;</span>
+    <span class="tag-hl">&lt;meta</span> <span class="attr-hl">charset</span>=<span class="str">"UTF-8"</span><span class="tag-hl">&gt;</span>
+    <span class="tag-hl">&lt;title&gt;</span>{{ config('app.name') }} — @yield('title')<span class="tag-hl">&lt;/title&gt;</span>
+    <span class="tag-hl">&lt;meta</span> <span class="attr-hl">name</span>=<span class="str">"csrf-token"</span> <span class="attr-hl">content</span>=<span class="str">"{{ csrf_token() }}"</span><span class="tag-hl">&gt;</span>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+<span class="tag-hl">&lt;/head&gt;</span>
+<span class="tag-hl">&lt;body&gt;</span>
+    @include('components.nav')
+
+    <span class="cm">{{-- Flash messages --}}</span>
+    @if(session('success'))
+        <span class="tag-hl">&lt;div</span> <span class="attr-hl">class</span>=<span class="str">"alert alert-success"</span><span class="tag-hl">&gt;</span>{{ session('success') }}<span class="tag-hl">&lt;/div&gt;</span>
+    @endif
+
+    <span class="cm">{{-- Each page injects its content here --}}</span>
+    <span class="tag-hl">&lt;main&gt;</span>
+        @yield('content')
+    <span class="tag-hl">&lt;/main&gt;</span>
+
+    @include('components.footer')
+    @stack('scripts') <span class="cm">{{-- per-page JS goes here --}}</span>
+<span class="tag-hl">&lt;/body&gt;</span>
+<span class="tag-hl">&lt;/html&gt;</span></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">resources/views/products/index.blade.php</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="tag-hl">@extends</span>(<span class="str">'layouts.app'</span>)
+
+<span class="tag-hl">@section</span>(<span class="str">'title'</span>, <span class="str">'Products'</span>)
+
+<span class="tag-hl">@section</span>(<span class="str">'content'</span>)
+    <span class="tag-hl">&lt;div</span> <span class="attr-hl">class</span>=<span class="str">"products-grid"</span><span class="tag-hl">&gt;</span>
+        @forelse ($products as $product)
+            <span class="tag-hl">&lt;x-product-card</span> <span class="attr-hl">:product</span>=<span class="str">"$product"</span> <span class="tag-hl">/&gt;</span>
+        @empty
+            <span class="tag-hl">&lt;p&gt;</span>No products found.<span class="tag-hl">&lt;/p&gt;</span>
+        @endforelse
+    <span class="tag-hl">&lt;/div&gt;</span>
+    {{ $products->links() }}  <span class="cm">{{-- Pagination --}}</span>
+<span class="tag-hl">@endsection</span>
+
+<span class="tag-hl">@push</span>(<span class="str">'scripts'</span>)
+    <span class="tag-hl">&lt;script</span> <span class="attr-hl">src</span>=<span class="str">"{{ asset('js/cart.js') }}"</span><span class="tag-hl">&gt;&lt;/script&gt;</span>
+<span class="tag-hl">@endpush</span></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">resources/views/components/product-card.blade.php</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="cm">{{-- Reusable product card component --}}</span>
+<span class="cm">{{-- Usage: &lt;x-product-card :product="$product" /&gt; --}}</span>
+
+<span class="tag-hl">@props</span>([<span class="str">'product'</span>])
+
+<span class="tag-hl">&lt;div</span> <span class="attr-hl">class</span>=<span class="str">"product-card"</span><span class="tag-hl">&gt;</span>
+    <span class="tag-hl">&lt;img</span> <span class="attr-hl">src</span>=<span class="str">"{{ asset('storage/'.$product->image) }}"</span>
+         <span class="attr-hl">alt</span>=<span class="str">"{{ $product->name }}"</span><span class="tag-hl">&gt;</span>
+    <span class="tag-hl">&lt;h3&gt;</span>{{ $product->name }}<span class="tag-hl">&lt;/h3&gt;</span>
+    <span class="tag-hl">&lt;p&gt;</span>₱ {{ number_format($product->price, 2) }}<span class="tag-hl">&lt;/p&gt;</span>
+
+    @auth
+        <span class="tag-hl">&lt;button</span> <span class="attr-hl">class</span>=<span class="str">"btn-add-cart"</span> <span class="attr-hl">data-id</span>=<span class="str">"{{ $product->id }}"</span><span class="tag-hl">&gt;</span>
+            Add to Cart
+        <span class="tag-hl">&lt;/button&gt;</span>
+    @else
+        <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/login"</span><span class="tag-hl">&gt;</span>Login to Buy<span class="tag-hl">&lt;/a&gt;</span>
+    @endauth
+<span class="tag-hl">&lt;/div&gt;</span></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">resources/js/app.js — entry point (Laravel 12 + Vite)</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">import</span> <span class="str">'./bootstrap'</span>;
+<span class="kw">import</span> <span class="str">'./cart'</span>;
+<span class="kw">import</span> <span class="str">'./search'</span>;
+
+<span class="cm">// Alpine.js (optional, for lightweight reactivity)</span>
+<span class="kw">import</span> Alpine <span class="kw">from</span> <span class="str">'alpinejs'</span>;
+window.Alpine = Alpine;
+Alpine.<span class="fn">start</span>();</pre>
+      </div>
+
+      <div class="info-box info-box--tip reveal">
+        <div class="info-box__icon">💡</div>
+        <div class="info-box__text">
+          <strong>Laravel 8 uses Mix, Laravel 12 uses Vite.</strong> In Laravel 8, call assets with
+          <code>mix('css/app.css')</code>. In Laravel 12 use <code>@vite(['resources/css/app.css'])</code>.
+          The <code>resources/</code> folder structure is the same for both.
+        </div>
+      </div>
+    </div><!-- /panel-resources -->
+
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PANEL: public/                                          -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="folder-panel" id="panel-public">
+
+      <div class="folder-banner folder-banner--public reveal">
+        <div class="folder-banner__path">📁 /public</div>
+        <h2 class="folder-banner__title">public/</h2>
+        <p class="folder-banner__desc">
+          The <strong>only folder the web server can see</strong>. Your domain points here.
+          <code>index.php</code> is the entry point for every request.
+          Never put sensitive files here — keep business logic in <code>app/</code>.
+        </p>
+      </div>
+
+      <h3 class="section-h3">📂 What's Inside</h3>
+      <div class="subfolder-grid">
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🚪</span>
+            <span class="subfolder-card__name">public/index.php</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">The front controller. Every single HTTP request enters Laravel through this file. Don't edit it — Laravel manages it.</p>
+            <ul class="subfolder-card__files">
+              <li>Loads <span>vendor/autoload.php</span></li>
+              <li>Boots <span>bootstrap/app.php</span></li>
+              <li>Handles the request → returns response</li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🖼️</span>
+            <span class="subfolder-card__name">public/images/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Static images that don't change — logos, icons, placeholder images. Reference with <code>asset('images/logo.png')</code>.</p>
+            <ul class="subfolder-card__files">
+              <li><span>logo.png</span></li>
+              <li><span>placeholder.jpg</span></li>
+              <li><span>favicon.ico</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🔗</span>
+            <span class="subfolder-card__name">public/storage/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">A <strong>symlink</strong> pointing to <code>storage/app/public/</code>. User-uploaded files (product images, avatars) live here. Created by <code>php artisan storage:link</code>.</p>
+            <ul class="subfolder-card__files">
+              <li>products/<span>laptop.jpg</span></li>
+              <li>avatars/<span>user-1.jpg</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">📦</span>
+            <span class="subfolder-card__name">public/build/ (Laravel 12)</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Vite outputs compiled CSS and JS here. Auto-generated — never edit these files manually. Add <code>public/build</code> to <code>.gitignore</code>.</p>
+            <ul class="subfolder-card__files">
+              <li>assets/<span>app-[hash].css</span></li>
+              <li>assets/<span>app-[hash].js</span></li>
+              <li><span>manifest.json</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">📦</span>
+            <span class="subfolder-card__name">public/css/ & public/js/ (Laravel 8)</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Laravel Mix compiled output in Laravel 8. Mix writes here from <code>resources/</code> source files via <code>npm run dev</code>.</p>
+            <ul class="subfolder-card__files">
+              <li>css/<span>app.css</span></li>
+              <li>js/<span>app.js</span></li>
+              <li><span>mix-manifest.json</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">📄</span>
+            <span class="subfolder-card__name">public/.htaccess</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Apache rewrite rules. Routes all requests to <code>index.php</code> so Laravel's router handles them. Required for pretty URLs without <code>/index.php/</code> in the path.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-h3">⚠️ Golden Rules for public/</h3>
+      <div class="rule-block reveal">
+        <div class="rule-block__icon">🚫</div>
+        <div>
+          <div class="rule-block__title">Never put PHP business logic in public/</div>
+          <div class="rule-block__desc">The web server can serve anything in <code>public/</code> directly. If you put a PHP file with database credentials here, it could be read by anyone. Business logic belongs in <code>app/</code>.</div>
+        </div>
+      </div>
+      <div class="rule-block reveal">
+        <div class="rule-block__icon">🔗</div>
+        <div>
+          <div class="rule-block__title">User uploads go to storage/, accessed via public/storage/</div>
+          <div class="rule-block__desc">Store files with <code>Storage::disk('public')->put()</code>. Run <code>php artisan storage:link</code> once to create the symlink. Reference in Blade with <code>asset('storage/products/image.jpg')</code>.</div>
+          <div class="rule-block__example">php artisan storage:link → creates public/storage → symlink to storage/app/public</div>
+        </div>
+      </div>
+      <div class="rule-block reveal">
+        <div class="rule-block__icon">🌐</div>
+        <div>
+          <div class="rule-block__title">On shared hosting, point your domain to public/</div>
+          <div class="rule-block__desc">Your domain's document root must be <code>/path/to/project/public</code>, not the project root. This is the #1 deployment mistake beginners make.</div>
+          <div class="rule-block__example">cPanel: Document Root → /home/username/laravel-shop/public</div>
+        </div>
+      </div>
+
+      <h3 class="section-h3">💻 Code Examples</h3>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">How to reference public/ assets in Blade</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="cm">{{-- asset() generates the full URL to public/ --}}</span>
+<span class="tag-hl">&lt;link</span> <span class="attr-hl">rel</span>=<span class="str">"stylesheet"</span> <span class="attr-hl">href</span>=<span class="str">"{{ asset('css/app.css') }}"</span><span class="tag-hl">&gt;</span>
+<span class="tag-hl">&lt;script</span> <span class="attr-hl">src</span>=<span class="str">"{{ asset('js/cart.js') }}"</span><span class="tag-hl">&gt;&lt;/script&gt;</span>
+<span class="tag-hl">&lt;img</span> <span class="attr-hl">src</span>=<span class="str">"{{ asset('images/logo.png') }}"</span><span class="tag-hl">&gt;</span>
+
+<span class="cm">{{-- User-uploaded files via storage symlink --}}</span>
+<span class="tag-hl">&lt;img</span> <span class="attr-hl">src</span>=<span class="str">"{{ asset('storage/' . $product->image) }}"</span><span class="tag-hl">&gt;</span>
+<span class="cm">{{-- OR using Storage facade --}}</span>
+<span class="tag-hl">&lt;img</span> <span class="attr-hl">src</span>=<span class="str">"{{ Storage::url($product->image) }}"</span><span class="tag-hl">&gt;</span>
+
+<span class="cm">{{-- Laravel 12: Vite compiled assets --}}</span>
+@vite(['resources/css/app.css', 'resources/js/app.js'])</pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">Uploading a file and storing it in public/storage</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="cm">// In your controller (e.g. ProductController@store)</span>
+<span class="kw">public function</span> <span class="fn">store</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="var">$request</span>-><span class="fn">validate</span>([
+        <span class="str">'image'</span> => <span class="str">'required|image|mimes:jpg,jpeg,png,webp|max:2048'</span>,
+    ]);
+
+    <span class="cm">// Store to storage/app/public/products/</span>
+    <span class="cm">// Accessible via public/storage/products/filename.jpg</span>
+    <span class="var">$path</span> = <span class="var">$request</span>-><span class="fn">file</span>(<span class="str">'image'</span>)-><span class="fn">store</span>(<span class="str">'products'</span>, <span class="str">'public'</span>);
+
+    <span class="cl">Product</span>::<span class="fn">create</span>([
+        <span class="str">'name'</span>  => <span class="var">$request</span>->name,
+        <span class="str">'image'</span> => <span class="var">$path</span>,  <span class="cm">// stored as "products/xxx.jpg"</span>
+    ]);
+}</pre>
+      </div>
+    </div><!-- /panel-public -->
+
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PANEL: database/                                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="folder-panel" id="panel-database">
+
+      <div class="folder-banner folder-banner--database reveal">
+        <div class="folder-banner__path">📁 /database</div>
+        <h2 class="folder-banner__title">database/</h2>
+        <p class="folder-banner__desc">
+          Every database-related file lives here: table schemas (migrations),
+          fake data generators (factories), and database population scripts (seeders).
+          This folder is version-controlled so your whole team shares the same DB structure.
+        </p>
+      </div>
+
+      <h3 class="section-h3">📂 Sub-folders</h3>
+      <div class="subfolder-grid">
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🏗️</span>
+            <span class="subfolder-card__name">database/migrations/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">PHP files that define your database tables. Each migration has an <code>up()</code> to create/alter and a <code>down()</code> to reverse it. Filename includes a timestamp for ordering.</p>
+            <ul class="subfolder-card__files">
+              <li><span>2024_01_01_000000_create_users_table.php</span></li>
+              <li><span>2024_01_01_000001_create_categories_table.php</span></li>
+              <li><span>2024_01_01_000002_create_products_table.php</span></li>
+              <li><span>2024_01_01_000003_create_orders_table.php</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🏭</span>
+            <span class="subfolder-card__name">database/factories/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Factory classes that define how to generate fake model data using Faker. Used by seeders and tests to quickly fill the DB with realistic records.</p>
+            <ul class="subfolder-card__files">
+              <li><span>UserFactory.php</span></li>
+              <li><span>ProductFactory.php</span></li>
+              <li><span>OrderFactory.php</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🌱</span>
+            <span class="subfolder-card__name">database/seeders/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Scripts that populate the database. <code>DatabaseSeeder.php</code> is the main one — it calls other seeders. Run with <code>php artisan db:seed</code>.</p>
+            <ul class="subfolder-card__files">
+              <li><span>DatabaseSeeder.php</span> — main entry</li>
+              <li><span>CategorySeeder.php</span></li>
+              <li><span>ProductSeeder.php</span></li>
+              <li><span>UserSeeder.php</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-h3">💻 Code Examples</h3>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">database/migrations/2024_01_01_create_products_table.php</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">use</span> <span class="cl">Illuminate\Database\Migrations\Migration</span>;
+<span class="kw">use</span> <span class="cl">Illuminate\Database\Schema\Blueprint</span>;
+<span class="kw">use</span> <span class="cl">Illuminate\Support\Facades\Schema</span>;
+
+<span class="kw">return new class extends</span> <span class="cl">Migration</span>
+{
+    <span class="kw">public function</span> <span class="fn">up</span>(): <span class="kw">void</span>
+    {
+        Schema::<span class="fn">create</span>(<span class="str">'products'</span>, <span class="kw">function</span> (Blueprint <span class="var">$table</span>) {
+            <span class="var">$table</span>-><span class="fn">id</span>();
+            <span class="var">$table</span>-><span class="fn">string</span>(<span class="str">'name'</span>);
+            <span class="var">$table</span>-><span class="fn">text</span>(<span class="str">'description'</span>)-><span class="fn">nullable</span>();
+            <span class="var">$table</span>-><span class="fn">decimal</span>(<span class="str">'price'</span>, <span class="num">10</span>, <span class="num">2</span>);
+            <span class="var">$table</span>-><span class="fn">unsignedInteger</span>(<span class="str">'stock'</span>)-><span class="fn">default</span>(<span class="num">0</span>);
+            <span class="var">$table</span>-><span class="fn">string</span>(<span class="str">'image'</span>)-><span class="fn">nullable</span>();
+            <span class="var">$table</span>-><span class="fn">boolean</span>(<span class="str">'is_featured'</span>)-><span class="fn">default</span>(<span class="kw">false</span>);
+            <span class="var">$table</span>-><span class="fn">foreignId</span>(<span class="str">'category_id'</span>)
+                   -><span class="fn">constrained</span>()
+                   -><span class="fn">cascadeOnDelete</span>();
+            <span class="var">$table</span>-><span class="fn">timestamps</span>();  <span class="cm">// created_at, updated_at</span>
+            <span class="var">$table</span>-><span class="fn">softDeletes</span>(); <span class="cm">// deleted_at (optional)</span>
+        });
+    }
+
+    <span class="kw">public function</span> <span class="fn">down</span>(): <span class="kw">void</span>
+    {
+        Schema::<span class="fn">dropIfExists</span>(<span class="str">'products'</span>);
+    }
+};</pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">database/factories/ProductFactory.php</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">class</span> <span class="cl">ProductFactory</span> <span class="kw">extends</span> <span class="cl">Factory</span>
+{
+    <span class="kw">public function</span> <span class="fn">definition</span>(): <span class="kw">array</span>
+    {
+        <span class="kw">return</span> [
+            <span class="str">'name'</span>        => <span class="var">$this</span>->faker-><span class="fn">words</span>(<span class="num">3</span>, <span class="kw">true</span>),
+            <span class="str">'description'</span> => <span class="var">$this</span>->faker-><span class="fn">paragraph</span>(),
+            <span class="str">'price'</span>       => <span class="var">$this</span>->faker-><span class="fn">randomFloat</span>(<span class="num">2</span>, <span class="num">50</span>, <span class="num">5000</span>),
+            <span class="str">'stock'</span>       => <span class="var">$this</span>->faker-><span class="fn">numberBetween</span>(<span class="num">0</span>, <span class="num">100</span>),
+            <span class="str">'is_featured'</span> => <span class="var">$this</span>->faker-><span class="fn">boolean</span>(<span class="num">20</span>), <span class="cm">// 20% chance</span>
+            <span class="str">'category_id'</span> => <span class="cl">Category</span>::<span class="fn">inRandomOrder</span>()-><span class="fn">value</span>(<span class="str">'id'</span>),
+        ];
+    }
+}</pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">database/seeders/DatabaseSeeder.php</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">public function</span> <span class="fn">run</span>(): <span class="kw">void</span>
+{
+    <span class="cm">// 1. Create categories first (products depend on them)</span>
+    <span class="cl">Category</span>::<span class="fn">factory</span>()-><span class="fn">createMany</span>([
+        [<span class="str">'name'</span> => <span class="str">'Electronics'</span>],
+        [<span class="str">'name'</span> => <span class="str">'Clothing'</span>],
+        [<span class="str">'name'</span> => <span class="str">'Books'</span>],
+        [<span class="str">'name'</span> => <span class="str">'Footwear'</span>],
+    ]);
+
+    <span class="cm">// 2. Create products using the factory</span>
+    <span class="cl">Product</span>::<span class="fn">factory</span>(<span class="num">50</span>)-><span class="fn">create</span>();
+
+    <span class="cm">// 3. Create admin user</span>
+    <span class="cl">User</span>::<span class="fn">factory</span>()-><span class="fn">create</span>([
+        <span class="str">'name'</span>     => <span class="str">'Admin'</span>,
+        <span class="str">'email'</span>    => <span class="str">'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0a6b6e6763644a7962657a24696567">[email&#160;protected]</a>'</span>,
+        <span class="str">'password'</span> => <span class="fn">bcrypt</span>(<span class="str">'password'</span>),
+        <span class="str">'role'</span>     => <span class="str">'admin'</span>,
+    ]);
+
+    <span class="cm">// 4. Create test customers</span>
+    <span class="cl">User</span>::<span class="fn">factory</span>(<span class="num">20</span>)-><span class="fn">create</span>();
+}
+
+<span class="cm">// Commands:</span>
+<span class="cm">// $ php artisan db:seed               — run seeders only</span>
+<span class="cm">// $ php artisan migrate:fresh --seed  — reset DB + seed</span></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">Common migration commands</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="cm"># Generate files</span>
+<span class="t-prompt">$</span> php artisan make:migration create_products_table
+<span class="t-prompt">$</span> php artisan make:migration add_stock_to_products_table --table=products
+<span class="t-prompt">$</span> php artisan make:factory ProductFactory --model=Product
+<span class="t-prompt">$</span> php artisan make:seeder ProductSeeder
+
+<span class="cm"># Run migrations</span>
+<span class="t-prompt">$</span> php artisan migrate              <span class="cm"># run pending migrations</span>
+<span class="t-prompt">$</span> php artisan migrate:rollback      <span class="cm"># undo last batch</span>
+<span class="t-prompt">$</span> php artisan migrate:fresh         <span class="cm"># drop all + re-run</span>
+<span class="t-prompt">$</span> php artisan migrate:fresh --seed  <span class="cm"># drop all + re-run + seed</span>
+<span class="t-prompt">$</span> php artisan migrate:status        <span class="cm"># see which ran</span></pre>
+      </div>
+    </div><!-- /panel-database -->
+
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PANEL: config/                                          -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="folder-panel" id="panel-config">
+
+      <div class="folder-banner folder-banner--config reveal">
+        <div class="folder-banner__path">📁 /config</div>
+        <h2 class="folder-banner__title">config/</h2>
+        <p class="folder-banner__desc">
+          All configuration files for your Laravel app. Each file returns an array.
+          Values come from <code>.env</code> via the <code>env()</code> helper.
+          <strong>Never hardcode secrets here</strong> — put them in <code>.env</code> and reference with <code>env()</code>.
+        </p>
+      </div>
+
+      <h3 class="section-h3">📄 Key Config Files</h3>
+      <div class="subfolder-grid">
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">⚙️</span>
+            <span class="subfolder-card__name">config/app.php</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">App name, environment, debug mode, URL, timezone, locale, encryption key, and registered service providers.</p>
+            <ul class="subfolder-card__files">
+              <li><span>'name'</span> — APP_NAME from .env</li>
+              <li><span>'debug'</span> — APP_DEBUG from .env</li>
+              <li><span>'timezone'</span> — e.g. 'Asia/Manila'</li>
+              <li><span>'providers'</span> — registered services</li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🗄️</span>
+            <span class="subfolder-card__name">config/database.php</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">All database connection configs. Default is <code>mysql</code>. Reads host, port, DB name, username, password from <code>.env</code>.</p>
+            <ul class="subfolder-card__files">
+              <li><span>'default'</span> — DB_CONNECTION</li>
+              <li><span>'connections'</span> — mysql, pgsql, sqlite</li>
+              <li><span>'redis'</span> — Redis config</li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">📧</span>
+            <span class="subfolder-card__name">config/mail.php</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Email sending config. Supports SMTP, Mailgun, SES, Postmark, sendmail. Set <code>MAIL_MAILER</code> in .env.</p>
+            <ul class="subfolder-card__files">
+              <li><span>MAIL_MAILER</span> — smtp / mailgun</li>
+              <li><span>MAIL_HOST</span> — smtp server</li>
+              <li><span>MAIL_FROM_ADDRESS</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🗃️</span>
+            <span class="subfolder-card__name">config/cache.php</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Cache driver config. Options: file (default), redis, database, array, memcached. Set <code>CACHE_DRIVER</code> in .env.</p>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🔐</span>
+            <span class="subfolder-card__name">config/auth.php</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Authentication guards and user providers. Defines which model is used for auth (<code>User::class</code> by default), and which table for passwords.</p>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">💾</span>
+            <span class="subfolder-card__name">config/session.php</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Session driver, lifetime, cookie name, secure flag. The cart session uses this. <code>SESSION_DRIVER</code> in .env: file, cookie, database, redis.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-h3">💻 Code Examples</h3>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">config/app.php — key settings to change</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">return</span> [
+    <span class="str">'name'</span>     => <span class="fn">env</span>(<span class="str">'APP_NAME'</span>, <span class="str">'LaravelShop'</span>),
+    <span class="str">'env'</span>      => <span class="fn">env</span>(<span class="str">'APP_ENV'</span>, <span class="str">'production'</span>),
+    <span class="str">'debug'</span>    => (<span class="kw">bool</span>) <span class="fn">env</span>(<span class="str">'APP_DEBUG'</span>, <span class="kw">false</span>),
+    <span class="str">'url'</span>      => <span class="fn">env</span>(<span class="str">'APP_URL'</span>, <span class="str">'http://localhost'</span>),
+
+    <span class="cm">// Change timezone to your local time</span>
+    <span class="str">'timezone'</span> => <span class="str">'Asia/Manila'</span>,
+    <span class="str">'locale'</span>   => <span class="str">'en'</span>,
+    <span class="str">'faker_locale'</span> => <span class="str">'en_PH'</span>, <span class="cm">// Filipino fake data</span>
+
+    <span class="str">'key'</span>      => <span class="fn">env</span>(<span class="str">'APP_KEY'</span>),  <span class="cm">// set by key:generate</span>
+    <span class="str">'cipher'</span>   => <span class="str">'AES-256-CBC'</span>,
+];</pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">Reading config values anywhere in your app</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="cm">// Read a config value</span>
+<span class="fn">config</span>(<span class="str">'app.name'</span>)          <span class="cm">// → 'LaravelShop'</span>
+<span class="fn">config</span>(<span class="str">'app.timezone'</span>)      <span class="cm">// → 'Asia/Manila'</span>
+<span class="fn">config</span>(<span class="str">'database.default'</span>) <span class="cm">// → 'mysql'</span>
+
+<span class="cm">// Read with a fallback default</span>
+<span class="fn">config</span>(<span class="str">'shop.currency'</span>, <span class="str">'PHP'</span>) <span class="cm">// returns 'PHP' if not set</span>
+
+<span class="cm">// Set a config value at runtime (not persisted)</span>
+<span class="fn">config</span>([<span class="str">'app.locale'</span> => <span class="str">'fil'</span>]);
+
+<span class="cm">// In Blade</span>
+<span class="cm">{{-- {{ config('app.name') }} --}}</span></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">Creating your own custom config file</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="cm">// config/shop.php — your own config file</span>
+<span class="kw">return</span> [
+    <span class="str">'currency'</span>     => <span class="fn">env</span>(<span class="str">'SHOP_CURRENCY'</span>, <span class="str">'PHP'</span>),
+    <span class="str">'per_page'</span>     => <span class="num">12</span>,
+    <span class="str">'free_shipping'=> <span class="num">1000</span>,  <span class="cm">// free shipping over ₱1000</span>
+    <span class="str">'tax_rate'</span>     => <span class="num">0.12</span>,  <span class="cm">// 12% VAT</span>
+];
+
+<span class="cm">// Use it anywhere:</span>
+<span class="fn">config</span>(<span class="str">'shop.currency'</span>)    <span class="cm">// → 'PHP'</span>
+<span class="fn">config</span>(<span class="str">'shop.tax_rate'</span>)    <span class="cm">// → 0.12</span>
+
+<span class="cm">// Cache config in production (faster):</span>
+<span class="cm">// $ php artisan config:cache</span>
+<span class="cm">// $ php artisan config:clear  ← run this after changing .env</span></pre>
+      </div>
+
+      <div class="info-box info-box--warn reveal">
+        <div class="info-box__icon">⚠️</div>
+        <div class="info-box__text">
+          <strong>After editing .env, run <code>php artisan config:clear</code></strong> — Laravel caches config values for performance. If you change .env without clearing, your app may still use old values.
+        </div>
+      </div>
+    </div><!-- /panel-config -->
+
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- PANEL: app/                                             -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="folder-panel" id="panel-app">
+
+      <div class="folder-banner folder-banner--app reveal">
+        <div class="folder-banner__path">📁 /app</div>
+        <h2 class="folder-banner__title">app/</h2>
+        <p class="folder-banner__desc">
+          The heart of your Laravel application. All your PHP business logic lives here —
+          controllers that handle requests, models that talk to the database, middleware
+          that filters requests, and service providers that boot everything up.
+        </p>
+      </div>
+
+      <h3 class="section-h3">📂 Sub-folders</h3>
+      <div class="subfolder-grid">
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🎮</span>
+            <span class="subfolder-card__name">app/Http/Controllers/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Controller classes that receive HTTP requests and return responses. One controller per resource (Product, Order, Cart, etc.).</p>
+            <ul class="subfolder-card__files">
+              <li>Auth/<span>LoginController.php</span></li>
+              <li>Admin/<span>ProductController.php</span></li>
+              <li><span>CartController.php</span></li>
+              <li><span>ProductController.php</span></li>
+              <li><span>OrderController.php</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🛡️</span>
+            <span class="subfolder-card__name">app/Http/Middleware/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Filter classes that run before or after controllers. Check auth state, roles, rate limiting, logging, etc.</p>
+            <ul class="subfolder-card__files">
+              <li><span>Authenticate.php</span> — auth check</li>
+              <li><span>AdminMiddleware.php</span> — role check</li>
+              <li><span>RedirectIfAuthenticated.php</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">📋</span>
+            <span class="subfolder-card__name">app/Http/Requests/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Form Request classes for validation. Move validation logic out of controllers into dedicated classes. Auto-validated before the controller method runs.</p>
+            <ul class="subfolder-card__files">
+              <li><span>StoreProductRequest.php</span></li>
+              <li><span>UpdateProductRequest.php</span></li>
+              <li><span>PlaceOrderRequest.php</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">🗃️</span>
+            <span class="subfolder-card__name">app/Models/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Eloquent model classes — one per database table. Define <code>$fillable</code>, relationships, casts, scopes, and accessors here.</p>
+            <ul class="subfolder-card__files">
+              <li><span>User.php</span></li>
+              <li><span>Product.php</span></li>
+              <li><span>Category.php</span></li>
+              <li><span>Order.php</span></li>
+              <li><span>OrderItem.php</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">📡</span>
+            <span class="subfolder-card__name">app/Providers/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Service provider classes that boot your app. Register event listeners, bind interfaces to implementations, share view data globally.</p>
+            <ul class="subfolder-card__files">
+              <li><span>AppServiceProvider.php</span></li>
+              <li><span>AuthServiceProvider.php</span></li>
+              <li><span>RouteServiceProvider.php</span></li>
+              <li><span>EventServiceProvider.php</span></li>
+            </ul>
+          </div>
+        </div>
+        <div class="subfolder-card reveal">
+          <div class="subfolder-card__header">
+            <span class="subfolder-card__icon">👂</span>
+            <span class="subfolder-card__name">app/Listeners/</span>
+          </div>
+          <div class="subfolder-card__body">
+            <p class="subfolder-card__desc">Event listener classes that react to events (login, order placed, etc.). Wired to events in <code>EventServiceProvider</code>.</p>
+            <ul class="subfolder-card__files">
+              <li><span>MergeCartOnLogin.php</span></li>
+              <li><span>SendOrderConfirmation.php</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-h3">💻 Code Examples</h3>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">app/Models/Product.php — full model</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">namespace</span> <span class="cl">App\Models</span>;
+
+<span class="kw">use</span> <span class="cl">Illuminate\Database\Eloquent\Model</span>;
+<span class="kw">use</span> <span class="cl">Illuminate\Database\Eloquent\Factories\HasFactory</span>;
+<span class="kw">use</span> <span class="cl">Illuminate\Database\Eloquent\SoftDeletes</span>;
+
+<span class="kw">class</span> <span class="cl">Product</span> <span class="kw">extends</span> <span class="cl">Model</span>
+{
+    <span class="kw">use</span> <span class="cl">HasFactory</span>, <span class="cl">SoftDeletes</span>;
+
+    <span class="cm">// Columns allowed for mass assignment</span>
+    <span class="kw">protected</span> <span class="var">$fillable</span> = [
+        <span class="str">'name'</span>, <span class="str">'description'</span>, <span class="str">'price'</span>,
+        <span class="str">'stock'</span>, <span class="str">'image'</span>, <span class="str">'is_featured'</span>, <span class="str">'category_id'</span>,
+    ];
+
+    <span class="cm">// Auto type casting</span>
+    <span class="kw">protected</span> <span class="var">$casts</span> = [
+        <span class="str">'price'</span>       => <span class="str">'float'</span>,
+        <span class="str">'is_featured'</span> => <span class="str">'boolean'</span>,
+    ];
+
+    <span class="cm">// Relationships</span>
+    <span class="kw">public function</span> <span class="fn">category</span>()
+    {
+        <span class="kw">return</span> <span class="var">$this</span>-><span class="fn">belongsTo</span>(<span class="cl">Category</span>::<span class="kw">class</span>);
+    }
+
+    <span class="kw">public function</span> <span class="fn">orderItems</span>()
+    {
+        <span class="kw">return</span> <span class="var">$this</span>-><span class="fn">hasMany</span>(<span class="cl">OrderItem</span>::<span class="kw">class</span>);
+    }
+
+    <span class="cm">// Local scope — reusable query filter</span>
+    <span class="kw">public function</span> <span class="fn">scopeInStock</span>(<span class="var">$query</span>)
+    {
+        <span class="kw">return</span> <span class="var">$query</span>-><span class="fn">where</span>(<span class="str">'stock'</span>, <span class="str">'>'</span>, <span class="num">0</span>);
+    }
+
+    <span class="cm">// Accessor — formatted price</span>
+    <span class="kw">public function</span> <span class="fn">getFormattedPriceAttribute</span>()
+    {
+        <span class="kw">return</span> <span class="str">'₱ '</span> . <span class="fn">number_format</span>(<span class="var">$this</span>->price, <span class="num">2</span>);
+    }
+}
+
+<span class="cm">// Usage:</span>
+<span class="cm">// Product::inStock()->get()      ← uses the scope</span>
+<span class="cm">// $product->formatted_price      ← uses the accessor</span></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">app/Http/Controllers/ProductController.php</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">namespace</span> <span class="cl">App\Http\Controllers</span>;
+
+<span class="kw">use</span> <span class="cl">App\Models\Product</span>;
+<span class="kw">use</span> <span class="cl">App\Models\Category</span>;
+<span class="kw">use</span> <span class="cl">App\Http\Requests\StoreProductRequest</span>;
+<span class="kw">use</span> <span class="cl">Illuminate\Http\Request</span>;
+
+<span class="kw">class</span> <span class="cl">ProductController</span> <span class="kw">extends</span> <span class="cl">Controller</span>
+{
+    <span class="cm">// GET /products</span>
+    <span class="kw">public function</span> <span class="fn">index</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+    {
+        <span class="var">$products</span> = <span class="cl">Product</span>::<span class="fn">with</span>(<span class="str">'category'</span>)
+            -><span class="fn">inStock</span>()
+            -><span class="fn">when</span>(<span class="var">$request</span>->search, <span class="kw">fn</span>(<span class="var">$q</span>, <span class="var">$s</span>) =>
+                <span class="var">$q</span>-><span class="fn">where</span>(<span class="str">'name'</span>, <span class="str">'like'</span>, <span class="str">"%{$s}%"</span>)
+            )
+            -><span class="fn">latest</span>()-><span class="fn">paginate</span>(<span class="fn">config</span>(<span class="str">'shop.per_page'</span>, <span class="num">12</span>));
+
+        <span class="var">$categories</span> = <span class="cl">Category</span>::<span class="fn">all</span>();
+
+        <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'products.index'</span>, <span class="fn">compact</span>(<span class="str">'products'</span>, <span class="str">'categories'</span>));
+    }
+
+    <span class="cm">// GET /products/{product}</span>
+    <span class="kw">public function</span> <span class="fn">show</span>(<span class="cl">Product</span> <span class="var">$product</span>)
+    {
+        <span class="var">$related</span> = <span class="cl">Product</span>::<span class="fn">where</span>(<span class="str">'category_id'</span>, <span class="var">$product</span>->category_id)
+            -><span class="fn">where</span>(<span class="str">'id'</span>, <span class="str">'!='</span>, <span class="var">$product</span>->id)
+            -><span class="fn">inStock</span>()-><span class="fn">limit</span>(<span class="num">4</span>)-><span class="fn">get</span>();
+
+        <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'products.show'</span>, <span class="fn">compact</span>(<span class="str">'product'</span>, <span class="str">'related'</span>));
+    }
+}</pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">app/Http/Requests/StoreProductRequest.php — Form Request</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">class</span> <span class="cl">StoreProductRequest</span> <span class="kw">extends</span> <span class="cl">FormRequest</span>
+{
+    <span class="cm">// Who is allowed to make this request?</span>
+    <span class="kw">public function</span> <span class="fn">authorize</span>(): <span class="kw">bool</span>
+    {
+        <span class="kw">return</span> <span class="fn">auth</span>()-><span class="fn">user</span>()-><span class="fn">role</span> === <span class="str">'admin'</span>;
+    }
+
+    <span class="cm">// Validation rules</span>
+    <span class="kw">public function</span> <span class="fn">rules</span>(): <span class="kw">array</span>
+    {
+        <span class="kw">return</span> [
+            <span class="str">'name'</span>        => <span class="str">'required|string|max:255'</span>,
+            <span class="str">'price'</span>       => <span class="str">'required|numeric|min:0'</span>,
+            <span class="str">'stock'</span>       => <span class="str">'required|integer|min:0'</span>,
+            <span class="str">'category_id'</span> => <span class="str">'required|exists:categories,id'</span>,
+            <span class="str">'image'</span>       => <span class="str">'nullable|image|max:2048'</span>,
+        ];
+    }
+
+    <span class="cm">// Custom error messages</span>
+    <span class="kw">public function</span> <span class="fn">messages</span>(): <span class="kw">array</span>
+    {
+        <span class="kw">return</span> [
+            <span class="str">'category_id.exists'</span> => <span class="str">'Please select a valid category.'</span>,
+        ];
+    }
+}
+
+<span class="cm">// In controller — just type-hint it, Laravel auto-validates:</span>
+<span class="cm">// public function store(StoreProductRequest $request) { ... }</span></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">app/Providers/AppServiceProvider.php — share data to all views</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="kw">use</span> <span class="cl">App\Models\Category</span>;
+<span class="kw">use</span> <span class="cl">Illuminate\Support\Facades\View</span>;
+
+<span class="kw">public function</span> <span class="fn">boot</span>(): <span class="kw">void</span>
+{
+    <span class="cm">// Share categories to ALL Blade views automatically</span>
+    <span class="cm">// Now every view can use $categories without controller code</span>
+    <span class="cl">View</span>::<span class="fn">share</span>(<span class="str">'categories'</span>, <span class="cl">Category</span>::<span class="fn">all</span>());
+
+    <span class="cm">// Share cart count to all views</span>
+    <span class="cl">View</span>::<span class="fn">composer</span>(<span class="str">'*'</span>, <span class="kw">function</span> (<span class="var">$view</span>) {
+        <span class="var">$view</span>-><span class="fn">with</span>(<span class="str">'cartCount'</span>, <span class="fn">count</span>(<span class="fn">session</span>(<span class="str">'cart'</span>, [])));
+    });
+}</pre>
+      </div>
+
+      <div class="info-box info-box--tip reveal">
+        <div class="info-box__icon">💡</div>
+        <div class="info-box__text">
+          <strong>Generate files quickly with Artisan:</strong><br>
+          <code>php artisan make:model Product -mcr</code> creates the Model, Migration, Controller, and Resource routes all at once. Add <code>-f</code> for Factory, <code>-s</code> for Seeder.
+        </div>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-block__header">
+          <span class="code-block__lang">All make: commands for app/ files</span>
+          <button class="code-block__copy">Copy</button>
+        </div>
+        <pre><span class="t-prompt">$</span> php artisan make:model Product -mcrsf <span class="cm"># model+migration+controller+resource+seeder+factory</span>
+<span class="t-prompt">$</span> php artisan make:controller ProductController --resource
+<span class="t-prompt">$</span> php artisan make:middleware AdminMiddleware
+<span class="t-prompt">$</span> php artisan make:request StoreProductRequest
+<span class="t-prompt">$</span> php artisan make:provider ShopServiceProvider
+<span class="t-prompt">$</span> php artisan make:listener SendOrderConfirmation
+<span class="t-prompt">$</span> php artisan make:event OrderPlaced
+<span class="t-prompt">$</span> php artisan make:policy ProductPolicy --model=Product</pre>
+      </div>
+    </div><!-- /panel-app -->
+
+    <!-- CHAPTER NAV -->
+    <div class="chapter-nav" style="margin-top:60px;">
+      <a href="chapter1.html" class="chapter-nav__link">
+        <span class="chapter-nav__label">← Back to</span>
+        <span class="chapter-nav__title">Setup & Installation</span>
+      </a>
+      <a href="chapter2.html" class="chapter-nav__link chapter-nav__link--next">
+        <span class="chapter-nav__label">Next →</span>
+        <span class="chapter-nav__title">Database & Models</span>
+      </a>
+    </div>
+
+  </div><!-- /chapter-page -->
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="../js/canvas.js"></script>
+  <script src="../js/scroll.js"></script>
+  <script src="../js/nav.js"></script>
+  <script>
+    // ── Folder Tab Switcher ──
+    function switchPanel(key) {
+      document.querySelectorAll('.ftab').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.panel === key);
+      });
+      document.querySelectorAll('.folder-panel').forEach(function(p) {
+        p.classList.remove('active');
+      });
+      var panel = document.getElementById('panel-' + key);
+      if (!panel) return;
+      panel.classList.add('active');
+      panel.querySelectorAll('.reveal, .reveal-section, .step').forEach(function(el) {
+        el.classList.add('visible');
+      });
+      window.scrollTo({ top: 180, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.ftab').forEach(function(btn) {
+      btn.addEventListener('click', function() { switchPanel(btn.dataset.panel); });
+    });
+
+    switchPanel('resources');
+    setTimeout(function() { switchPanel('resources'); }, 150);
+
+    // Copy with file:// fallback
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.code-block__copy');
+      if (!btn) return;
+      var pre = btn.closest('.code-block') && btn.closest('.code-block').querySelector('pre');
+      if (!pre) return;
+      var text = pre.innerText || pre.textContent || '';
+      function flash() {
+        var o = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        btn.style.color = '#00d68f';
+        btn.style.borderColor = '#00d68f';
+        setTimeout(function() { btn.textContent = o; btn.style.color=''; btn.style.borderColor=''; }, 2000);
+      }
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand('copy'); flash(); } catch(err) {}
+      document.body.removeChild(ta);
+    });
+  </script>
+</body>
+</html>

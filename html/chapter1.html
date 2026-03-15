@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chapter 1 — Setup & Installation | Laravel Mastery</title>
+
+<link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </a>
+    <div class="nav__links">
+      <a href="chapter1.html" style="color:var(--accent-red)">Setup</a>
+      <a href="chapter-folders.html">Folders</a>
+      <a href="chapter2.html">Database</a>
+      <a href="chapter3.html">Auth</a>
+      <a href="chapter-guest-auth.html">Guest/Auth</a>
+      <a href="chapter4.html">E-Com</a>
+      <a href="chapter5.html">Deploy</a>
+    </div>
+    <a href="../index.html" class="nav__badge" title="Back to Home — Setup"><span class="nav__badge-num">Ch.01</span> · Setup</a>
+  </nav>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="chapter-page">
+    <div class="chapter-hero">
+      <p class="chapter-hero__num">// CHAPTER 01</p>
+      <h1 class="chapter-hero__title">Setup & Installation</h1>
+      <p class="chapter-hero__desc">
+        Install Laragon on Windows, set up PHP & Composer, and create your first
+        Laravel 8 and Laravel 12 projects from scratch. We'll also walk through
+        the project structure and fix the most common setup errors.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <span class="badge badge--red">Laragon</span>
+        <span class="badge badge--green">PHP 8.x</span>
+        <span class="badge badge--blue">Composer</span>
+        <span class="badge badge--yellow">Artisan</span>
+      </div>
+    </div>
+
+    <div class="chapter-layout">
+
+      <!-- TOC -->
+      <aside>
+        <div class="toc">
+          <p class="toc__title">// Contents</p>
+          <ul class="toc__list">
+            <li class="toc__item"><a href="#laragon">1. Install Laragon</a></li>
+            <li class="toc__item"><a href="#composer">2. Composer Setup</a></li>
+            <li class="toc__item"><a href="#laravel8">3. Laravel 8 Project</a></li>
+            <li class="toc__item"><a href="#laravel12">4. Laravel 12 Project</a></li>
+            <li class="toc__item"><a href="#structure">5. Project Structure</a></li>
+            <li class="toc__item"><a href="#serve">6. php artisan serve</a></li>
+            <li class="toc__item"><a href="#errors">7. Common Errors</a></li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- CONTENT -->
+      <main>
+
+        <!-- STEP 1 -->
+        <div class="step reveal" data-section="laragon" id="laragon">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <h2 class="step__title">Install Laragon</h2>
+            <p class="step__desc">
+              Laragon is a fast, lightweight local development environment for Windows.
+              It bundles Apache/Nginx, PHP, MySQL/MariaDB, and more — all in one click.
+            </p>
+
+            <!-- SIMULATED SCREENSHOT -->
+            <div class="mockup-frame">
+              <div class="mockup-frame__bar">
+                <div class="mockup-frame__dots">
+                  <div class="mockup-frame__dot mockup-frame__dot--r"></div>
+                  <div class="mockup-frame__dot mockup-frame__dot--y"></div>
+                  <div class="mockup-frame__dot mockup-frame__dot--g"></div>
+                </div>
+                <div class="mockup-frame__url">laragon.org/download</div>
+              </div>
+              <div class="mockup-frame__body">
+                <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+                  <div style="padding:20px;background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.2);border-radius:12px;text-align:center;min-width:160px;">
+                    <div style="font-size:2rem;margin-bottom:8px;">🦎</div>
+                    <div style="font-family:var(--font-mono);font-size:0.8rem;color:var(--accent-red);font-weight:700;">Laragon Full 6.0</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin:6px 0;">185 MB • Windows</div>
+                    <div style="padding:6px 16px;background:linear-gradient(135deg,var(--accent-red),var(--accent-orange));border-radius:6px;font-size:0.75rem;color:white;font-family:var(--font-mono);cursor:pointer;margin-top:8px;">Download</div>
+                  </div>
+                  <div style="flex:1;min-width:200px;">
+                    <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">✅ Includes PHP 8.x, Apache, Nginx, MySQL, MariaDB, Redis, Node.js, npm</p>
+                    <p style="font-size:0.85rem;color:var(--text-secondary);">✅ No PATH or system config needed — just install and run.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">💡</div>
+              <div class="info-box__text">
+                <strong>Tip:</strong> Download <strong>Laragon Full</strong> (not Lite) — it includes MySQL, MariaDB, and
+                phpMyAdmin which we need throughout this course.
+              </div>
+            </div>
+
+            <p class="step__desc" style="margin-top:16px;">
+              After downloading, run the installer as Administrator. Accept the defaults.
+              Laragon will install to <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem;">C:\laragon</code> by default.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">After install — launch Laragon and click "Start All"</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-success">✓</span> Apache/Nginx   — running on port 80
+<span class="t-success">✓</span> MySQL/MariaDB  — running on port 3306
+<span class="t-success">✓</span> PHP 8.2        — ready
+<span class="t-success">✓</span> Redis          — running on port 6379</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step reveal" data-section="composer" id="composer">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <h2 class="step__title">Verify Composer & PHP</h2>
+            <p class="step__desc">
+              Laragon adds PHP and Composer to your PATH automatically. Open
+              Laragon's Terminal (or Windows Terminal) and verify:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> php --version
+<span class="t-success">PHP 8.2.10 (cli)</span>
+
+<span class="t-prompt">$</span> composer --version
+<span class="t-success">Composer version 2.6.5</span></pre>
+            </div>
+
+            <div class="info-box info-box--warn">
+              <div class="info-box__icon">⚠️</div>
+              <div class="info-box__text">
+                <strong>'php' is not recognized?</strong> In Laragon, go to <strong>Menu → PHP → Add PHP to PATH</strong>,
+                then restart your terminal. Alternatively add <code>C:\laragon\bin\php\php8.x</code> manually to System PATH.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step reveal" data-section="laravel8" id="laravel8">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <h2 class="step__title">Create a Laravel 8 Project</h2>
+            <p class="step__desc">
+              Navigate to <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem;">C:\laragon\www</code> and run:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Navigate to Laragon's www folder</span>
+<span class="t-prompt">$</span> cd C:\laragon\www
+
+<span class="cm"># Create a Laravel 8 project</span>
+<span class="t-prompt">$</span> composer create-project laravel/laravel:^8.0 shop-laravel8
+
+<span class="cm"># OR using the Laravel installer:</span>
+<span class="t-prompt">$</span> laravel new shop-laravel8 --version=8</pre>
+            </div>
+
+            <p class="step__desc">Once done, you can access it at <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem;">http://shop-laravel8.test</code> (Laragon auto-creates virtual hosts!).</p>
+
+            <div class="info-box info-box--info">
+              <div class="info-box__icon">🌐</div>
+              <div class="info-box__text">
+                <strong>Auto Virtual Hosts:</strong> Laragon creates a <code>.test</code> domain for every folder inside
+                <code>C:\laragon\www</code>. No manual Apache config needed!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step reveal" data-section="laravel12" id="laravel12">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <h2 class="step__title">Create a Laravel 12 Project</h2>
+            <p class="step__desc">
+              Laravel 12 requires PHP 8.2+. Laragon Full ships with it. Create the project:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> cd C:\laragon\www
+
+<span class="cm"># Latest Laravel (12 as of 2025)</span>
+<span class="t-prompt">$</span> composer create-project laravel/laravel shop-laravel12
+
+<span class="cm"># Check Laravel version inside the project:</span>
+<span class="t-prompt">$</span> cd shop-laravel12
+<span class="t-prompt">$</span> php artisan --version
+<span class="t-success">Laravel Framework 12.x.x</span></pre>
+            </div>
+
+            <div class="info-box info-box--info">
+              <div class="info-box__icon">📌</div>
+              <div class="info-box__text">
+                <strong>Laravel 8 vs 12 differences:</strong> Laravel 12 has a cleaner directory structure,
+                improved Vite integration (replacing Mix), and the <code>php artisan install:api</code> command
+                for API scaffolding. The core concepts — routes, models, controllers, Blade — remain the same.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step reveal" data-section="structure" id="structure">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <h2 class="step__title">Project Structure Explained</h2>
+            <p class="step__desc">Here's what each folder does in a fresh Laravel project:</p>
+
+            <div class="folder-tree">
+<span class="dir">shop/</span>
+├── <span class="dir">app/</span>
+│   ├── <span class="dir">Http/</span>
+│   │   ├── <span class="dir">Controllers/</span>   <span class="cm">← Your controller classes live here</span>
+│   │   └── <span class="dir">Middleware/</span>    <span class="cm">← Auth, CORS, etc.</span>
+│   └── <span class="dir">Models/</span>          <span class="cm">← Eloquent model classes</span>
+├── <span class="dir">config/</span>              <span class="cm">← App settings (database, mail, etc.)</span>
+├── <span class="dir hl">database/</span>
+│   ├── <span class="dir hl">migrations/</span>      <span class="cm">← ✨ Schema files — create tables here</span>
+│   └── <span class="dir">seeders/</span>         <span class="cm">← Fake data generators</span>
+├── <span class="dir">public/</span>              <span class="cm">← Web root — index.php, images, css</span>
+├── <span class="dir">resources/</span>
+│   └── <span class="dir hl">views/</span>           <span class="cm">← ✨ Blade templates (.blade.php)</span>
+├── <span class="dir hl">routes/</span>
+│   └── <span class="hl">web.php</span>          <span class="cm">← ✨ Define your URL routes here</span>
+├── <span class="dir">storage/</span>             <span class="cm">← Logs, uploaded files, cache</span>
+├── <span class="file">.env</span>               <span class="cm">← ✨ Environment config (DB, APP_KEY, etc.)</span>
+└── <span class="file">artisan</span>            <span class="cm">← Laravel CLI tool</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step reveal" data-section="serve" id="serve">
+          <div class="step__num">6</div>
+          <div class="step__content">
+            <h2 class="step__title">Run the Development Server</h2>
+            <p class="step__desc">
+              You can use Laragon's auto virtual host <em>or</em> Artisan's built-in server:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> cd C:\laragon\www\shop-laravel12
+<span class="t-prompt">$</span> php artisan serve
+
+<span class="t-success">INFO  Server running on http://127.0.0.1:8000</span>
+<span class="t-warn">Press Ctrl+C to stop the server</span></pre>
+            </div>
+
+            <div class="mockup-frame" style="margin-top:20px;">
+              <div class="mockup-frame__bar">
+                <div class="mockup-frame__dots">
+                  <div class="mockup-frame__dot mockup-frame__dot--r"></div>
+                  <div class="mockup-frame__dot mockup-frame__dot--y"></div>
+                  <div class="mockup-frame__dot mockup-frame__dot--g"></div>
+                </div>
+                <div class="mockup-frame__url">http://127.0.0.1:8000</div>
+              </div>
+              <div class="mockup-frame__body" style="text-align:center;padding:40px 24px;">
+                <div style="font-size:3rem;margin-bottom:16px;">🔴</div>
+                <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:800;margin-bottom:8px;">Laravel</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);margin-bottom:16px;">v12.x.x — Running</div>
+                <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                  <div style="padding:8px 16px;border:1px solid var(--border);border-radius:8px;font-size:0.78rem;color:var(--text-secondary);">📚 Documentation</div>
+                  <div style="padding:8px 16px;border:1px solid var(--border);border-radius:8px;font-size:0.78rem;color:var(--text-secondary);">💬 Laracasts</div>
+                  <div style="padding:8px 16px;border:1px solid var(--border);border-radius:8px;font-size:0.78rem;color:var(--text-secondary);">🌟 GitHub</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 7 -->
+        <div class="step reveal" data-section="errors" id="errors">
+          <div class="step__num">7</div>
+          <div class="step__content">
+            <h2 class="step__title">Common Setup Errors & Fixes</h2>
+
+            <div class="info-box info-box--error">
+              <div class="info-box__icon">🚨</div>
+              <div class="info-box__text">
+                <strong>No application encryption key has been specified.</strong><br>
+                Run: <code>php artisan key:generate</code> — this sets APP_KEY in your .env file.
+              </div>
+            </div>
+
+            <div class="info-box info-box--error">
+              <div class="info-box__icon">🚨</div>
+              <div class="info-box__text">
+                <strong>PHP version not compatible.</strong><br>
+                Laravel 12 needs PHP 8.2+. In Laragon, go to <strong>Menu → PHP → switch PHP version</strong>.
+              </div>
+            </div>
+
+            <div class="info-box info-box--error">
+              <div class="info-box__icon">🚨</div>
+              <div class="info-box__text">
+                <strong>storage/ or bootstrap/cache/ permission denied.</strong><br>
+                Run: <code>php artisan storage:link</code> and ensure those folders are writable.
+              </div>
+            </div>
+
+            <div class="info-box info-box--error">
+              <div class="info-box__icon">🚨</div>
+              <div class="info-box__text">
+                <strong>OpenSSL extension not found.</strong><br>
+                In Laragon, edit <code>php.ini</code> (Menu → PHP → php.ini) and ensure <code>extension=openssl</code> is uncommented.
+              </div>
+            </div>
+
+            <div class="code-block" style="margin-top:20px;">
+              <div class="code-block__header">
+                <span class="code-block__lang">Essential first-run commands</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> php artisan key:generate        <span class="cm"># Generate APP_KEY</span>
+<span class="t-prompt">$</span> php artisan storage:link         <span class="cm"># Create public/storage symlink</span>
+<span class="t-prompt">$</span> php artisan config:clear         <span class="cm"># Clear config cache</span>
+<span class="t-prompt">$</span> php artisan cache:clear          <span class="cm"># Clear application cache</span>
+<span class="t-prompt">$</span> composer install                 <span class="cm"># Install dependencies</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHAPTER NAV -->
+        <div class="chapter-nav">
+          <a href="../index.html" class="chapter-nav__link">
+            <span class="chapter-nav__label">← Back</span>
+            <span class="chapter-nav__title">Home</span>
+          </a>
+          <a href="chapter2.html" class="chapter-nav__link chapter-nav__link--next">
+            <span class="chapter-nav__label">Next →</span>
+            <span class="chapter-nav__title">Database & Models</span>
+          </a>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/canvas.js"></script>
+  <script src="../js/scroll.js"></script>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

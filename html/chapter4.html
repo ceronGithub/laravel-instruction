@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chapter 4 — E-Commerce App | Laravel Mastery</title>
+
+<link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </a>
+    <div class="nav__links">
+      <a href="chapter1.html">Setup</a>
+      <a href="chapter-folders.html">Folders</a>
+      <a href="chapter2.html">Database</a>
+      <a href="chapter3.html">Auth</a>
+      <a href="chapter-guest-auth.html">Guest/Auth</a>
+      <a href="chapter4.html" style="color:var(--accent-red)">E-Com</a>
+      <a href="chapter5.html">Deploy</a>
+    </div>
+    <a href="../index.html" class="nav__badge" title="Back to Home — E-Commerce"><span class="nav__badge-num">Ch.04</span> · E-Commerce</a>
+  </nav>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="chapter-page">
+    <div class="chapter-hero">
+      <p class="chapter-hero__num">// CHAPTER 04</p>
+      <h1 class="chapter-hero__title">E-Commerce App</h1>
+      <p class="chapter-hero__desc">
+        Build a complete online store: products listing, product detail page, AJAX add-to-cart,
+        live cart updates, order creation, admin CRUD dashboard, and data retrieval patterns
+        — all wired together with real Laravel logic.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <span class="badge badge--red">AJAX</span>
+        <span class="badge badge--green">Cart</span>
+        <span class="badge badge--blue">Orders</span>
+        <span class="badge badge--yellow">Admin</span>
+      </div>
+    </div>
+
+    <div class="chapter-layout">
+      <aside>
+        <div class="toc">
+          <p class="toc__title">// Contents</p>
+          <ul class="toc__list">
+            <li class="toc__item"><a href="#products">1. Products Listing</a></li>
+            <li class="toc__item"><a href="#product-detail">2. Product Detail</a></li>
+            <li class="toc__item"><a href="#ajax-cart">3. AJAX Add-to-Cart</a></li>
+            <li class="toc__item"><a href="#cart-page">4. Cart Page</a></li>
+            <li class="toc__item"><a href="#orders">5. Orders</a></li>
+            <li class="toc__item"><a href="#ajax-retrieve">6. Retrieve Data (AJAX)</a></li>
+            <li class="toc__item"><a href="#admin">7. Admin Dashboard</a></li>
+          </ul>
+        </div>
+      </aside>
+
+      <main>
+
+        <!-- STEP 1 -->
+        <div class="step reveal" id="products">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <h2 class="step__title">Products Listing Page</h2>
+            <p class="step__desc">
+              The controller fetches products from the DB, the Blade view renders them as cards.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/ProductController.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">index</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="var">$query</span> = <span class="cl">Product</span>::<span class="fn">with</span>(<span class="str">'category'</span>)-><span class="fn">where</span>(<span class="str">'stock'</span>, <span class="str">'>'</span>, <span class="num">0</span>);
+
+    <span class="cm">// Optional search filter</span>
+    <span class="kw">if</span> (<span class="var">$request</span>-><span class="fn">filled</span>(<span class="str">'search'</span>)) {
+        <span class="var">$query</span>-><span class="fn">where</span>(<span class="str">'name'</span>, <span class="str">'like'</span>, <span class="str">'%'</span> . <span class="var">$request</span>->search . <span class="str">'%'</span>);
+    }
+
+    <span class="cm">// Optional category filter</span>
+    <span class="kw">if</span> (<span class="var">$request</span>-><span class="fn">filled</span>(<span class="str">'category'</span>)) {
+        <span class="var">$query</span>-><span class="fn">where</span>(<span class="str">'category_id'</span>, <span class="var">$request</span>->category);
+    }
+
+    <span class="var">$products</span>   = <span class="var">$query</span>-><span class="fn">latest</span>()-><span class="fn">paginate</span>(<span class="num">12</span>);
+    <span class="var">$categories</span> = <span class="cl">Category</span>::<span class="fn">all</span>();
+
+    <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'products.index'</span>, <span class="fn">compact</span>(<span class="str">'products'</span>, <span class="str">'categories'</span>));
+}</pre>
+            </div>
+
+            <!-- SIMULATED STORE UI -->
+            <div class="ui-mockup">
+              <div class="ui-mockup__nav">
+                <span class="ui-mockup__nav-brand">🛒 LaravelShop</span>
+                <div class="ui-mockup__nav-links">
+                  <span>Electronics</span>
+                  <span>Clothing</span>
+                  <span>Books</span>
+                  <span style="color:var(--accent-green);">Cart (3)</span>
+                </div>
+              </div>
+              <div class="ui-mockup__body">
+                <div class="ui-mockup__card">
+                  <div class="ui-mockup__img-placeholder">💻</div>
+                  <div>
+                    <div class="ui-mockup__card-title">MacBook Pro M3</div>
+                    <div class="ui-mockup__card-price">₱ 89,999.00</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Category: Electronics • Stock: 12</div>
+                  </div>
+                  <button class="ui-mockup__btn">Add to Cart 🛒</button>
+                </div>
+                <div class="ui-mockup__card">
+                  <div class="ui-mockup__img-placeholder">👟</div>
+                  <div>
+                    <div class="ui-mockup__card-title">Nike Air Max 270</div>
+                    <div class="ui-mockup__card-price">₱ 6,500.00</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Category: Footwear • Stock: 48</div>
+                  </div>
+                  <button class="ui-mockup__btn">Add to Cart 🛒</button>
+                </div>
+                <div class="ui-mockup__card">
+                  <div class="ui-mockup__img-placeholder">📱</div>
+                  <div>
+                    <div class="ui-mockup__card-title">iPhone 16 Pro</div>
+                    <div class="ui-mockup__card-price">₱ 69,990.00</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Category: Electronics • Stock: 7</div>
+                  </div>
+                  <button class="ui-mockup__btn">Add to Cart 🛒</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/views/products/index.blade.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="tag-hl">@foreach</span> (<span class="var">$products</span> <span class="kw">as</span> <span class="var">$product</span>)
+<span class="tag-hl">&lt;div</span> <span class="attr-hl">class</span>=<span class="str">"product-card"</span><span class="tag-hl">&gt;</span>
+    <span class="tag-hl">&lt;img</span> <span class="attr-hl">src</span>=<span class="str">"{{ asset('storage/' . $product->image) }}"</span>
+         <span class="attr-hl">alt</span>=<span class="str">"{{ $product->name }}"</span><span class="tag-hl">&gt;</span>
+    <span class="tag-hl">&lt;h3&gt;</span>{{ $product->name }}<span class="tag-hl">&lt;/h3&gt;</span>
+    <span class="tag-hl">&lt;p</span> <span class="attr-hl">class</span>=<span class="str">"price"</span><span class="tag-hl">&gt;</span>₱ {{ number_format($product->price, 2) }}<span class="tag-hl">&lt;/p&gt;</span>
+    <span class="tag-hl">&lt;button</span>
+        <span class="attr-hl">class</span>=<span class="str">"btn-add-cart"</span>
+        <span class="attr-hl">data-id</span>=<span class="str">"{{ $product->id }}"</span><span class="tag-hl">&gt;</span>
+        Add to Cart
+    <span class="tag-hl">&lt;/button&gt;</span>
+<span class="tag-hl">&lt;/div&gt;</span>
+<span class="tag-hl">@endforeach</span>
+
+<span class="cm">{{-- Pagination links --}}</span>
+{{ $products->links() }}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 — AJAX CART -->
+        <div class="step reveal" id="ajax-cart">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <h2 class="step__title">AJAX Add-to-Cart</h2>
+            <p class="step__desc">
+              Instead of reloading the page, we use the Fetch API to add items to the cart
+              and update the cart count badge dynamically.
+            </p>
+
+            <div class="flow">
+              <div class="flow__node">User clicks<br>Add to Cart</div>
+              <div class="flow__arrow"></div>
+              <div class="flow__node flow__node--active">JS Fetch POST<br>/cart/add/{id}</div>
+              <div class="flow__arrow"></div>
+              <div class="flow__node">Laravel<br>CartController</div>
+              <div class="flow__arrow"></div>
+              <div class="flow__node">JSON Response<br>{ cartCount: 3 }</div>
+              <div class="flow__arrow"></div>
+              <div class="flow__node">Update badge<br>no page reload</div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/views/layouts/app.blade.php — CSRF meta tag (required!)</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="tag-hl">&lt;head&gt;</span>
+    <span class="cm">&lt;!-- Required for AJAX CSRF protection --&gt;</span>
+    <span class="tag-hl">&lt;meta</span> <span class="attr-hl">name</span>=<span class="str">"csrf-token"</span> <span class="attr-hl">content</span>=<span class="str">"{{ csrf_token() }}"</span><span class="tag-hl">&gt;</span>
+<span class="tag-hl">&lt;/head&gt;</span></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/js/cart.js — Fetch API AJAX</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Attach click listener to all "Add to Cart" buttons</span>
+document.<span class="fn">querySelectorAll</span>(<span class="str">'.btn-add-cart'</span>)
+  .<span class="fn">forEach</span>(btn => {
+    btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () => {
+        <span class="fn">addToCart</span>(btn.dataset.id, btn);
+    });
+});
+
+<span class="kw">async function</span> <span class="fn">addToCart</span>(productId, btn) {
+    btn.disabled = <span class="kw">true</span>;
+    btn.textContent = <span class="str">'Adding...'</span>;
+
+    <span class="kw">try</span> {
+        <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/cart/add/${productId}`</span>, {
+            method: <span class="str">'POST'</span>,
+            headers: {
+                <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+                <span class="str">'X-CSRF-TOKEN'</span>: document
+                    .<span class="fn">querySelector</span>(<span class="str">'meta[name="csrf-token"]'</span>).content,
+            },
+            body: <span class="cl">JSON</span>.<span class="fn">stringify</span>({ quantity: <span class="num">1</span> }),
+        });
+
+        <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+        <span class="cm">// Update the cart badge in the nav</span>
+        document.<span class="fn">getElementById</span>(<span class="str">'cart-badge'</span>).textContent = data.cartCount;
+
+        btn.textContent = <span class="str">'✓ Added!'</span>;
+        btn.style.background = <span class="str">'#00d68f'</span>;
+
+        <span class="fn">setTimeout</span>(() => {
+            btn.textContent = <span class="str">'Add to Cart'</span>;
+            btn.style.background = <span class="str">''</span>;
+            btn.disabled = <span class="kw">false</span>;
+        }, <span class="num">2000</span>);
+
+    } <span class="kw">catch</span> (err) {
+        btn.textContent = <span class="str">'Error!'</span>;
+        btn.disabled = <span class="kw">false</span>;
+    }
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/CartController.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">add</span>(<span class="cl">Request</span> <span class="var">$request</span>, <span class="cl">Product</span> <span class="var">$product</span>)
+{
+    <span class="var">$cart</span> = <span class="fn">session</span>(<span class="str">'cart'</span>, []);
+    <span class="var">$id</span>   = <span class="var">$product</span>->id;
+
+    <span class="kw">if</span> (<span class="fn">isset</span>(<span class="var">$cart</span>[<span class="var">$id</span>])) {
+        <span class="var">$cart</span>[<span class="var">$id</span>][<span class="str">'quantity'</span>] += <span class="var">$request</span>-><span class="fn">input</span>(<span class="str">'quantity'</span>, <span class="num">1</span>);
+    } <span class="kw">else</span> {
+        <span class="var">$cart</span>[<span class="var">$id</span>] = [
+            <span class="str">'name'</span>     => <span class="var">$product</span>->name,
+            <span class="str">'price'</span>    => <span class="var">$product</span>->price,
+            <span class="str">'quantity'</span> => <span class="num">1</span>,
+        ];
+    }
+
+    <span class="fn">session</span>([<span class="str">'cart'</span> => <span class="var">$cart</span>]);
+
+    <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([
+        <span class="str">'message'</span>   => <span class="str">'Added to cart!'</span>,
+        <span class="str">'cartCount'</span> => <span class="fn">count</span>(<span class="var">$cart</span>),
+    ]);
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step reveal" id="orders">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <h2 class="step__title">Creating Orders</h2>
+            <p class="step__desc">
+              When the user checks out, we convert the cart session into a persisted Order + OrderItems in the database.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/OrderController.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">store</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="var">$cart</span> = <span class="fn">session</span>(<span class="str">'cart'</span>, []);
+
+    <span class="kw">if</span> (<span class="fn">empty</span>(<span class="var">$cart</span>)) {
+        <span class="kw">return</span> <span class="fn">back</span>()-><span class="fn">with</span>(<span class="str">'error'</span>, <span class="str">'Your cart is empty!'</span>);
+    }
+
+    <span class="cm">// Calculate total</span>
+    <span class="var">$total</span> = <span class="fn">collect</span>(<span class="var">$cart</span>)-><span class="fn">sum</span>(<span class="kw">fn</span>(<span class="var">$item</span>) =>
+        <span class="var">$item</span>[<span class="str">'price'</span>] * <span class="var">$item</span>[<span class="str">'quantity'</span>]
+    );
+
+    <span class="cm">// Create the order</span>
+    <span class="var">$order</span> = <span class="cl">Order</span>::<span class="fn">create</span>([
+        <span class="str">'user_id'</span> => <span class="fn">auth</span>()-><span class="fn">id</span>(),
+        <span class="str">'total'</span>   => <span class="var">$total</span>,
+        <span class="str">'status'</span>  => <span class="str">'pending'</span>,
+    ]);
+
+    <span class="cm">// Create individual order items</span>
+    <span class="kw">foreach</span> (<span class="var">$cart</span> <span class="kw">as</span> <span class="var">$productId</span> => <span class="var">$item</span>) {
+        <span class="var">$order</span>->items()-><span class="fn">create</span>([
+            <span class="str">'product_id'</span> => <span class="var">$productId</span>,
+            <span class="str">'quantity'</span>   => <span class="var">$item</span>[<span class="str">'quantity'</span>],
+            <span class="str">'price'</span>      => <span class="var">$item</span>[<span class="str">'price'</span>],
+        ]);
+
+        <span class="cm">// Decrease stock</span>
+        <span class="cl">Product</span>::<span class="fn">where</span>(<span class="str">'id'</span>, <span class="var">$productId</span>)
+            -><span class="fn">decrement</span>(<span class="str">'stock'</span>, <span class="var">$item</span>[<span class="str">'quantity'</span>]);
+    }
+
+    <span class="fn">session</span>()-><span class="fn">forget</span>(<span class="str">'cart'</span>); <span class="cm">// Clear the cart</span>
+
+    <span class="kw">return</span> <span class="fn">redirect</span>()-><span class="fn">route</span>(<span class="str">'orders.show'</span>, <span class="var">$order</span>)
+        -><span class="fn">with</span>(<span class="str">'success'</span>, <span class="str">'Order placed! 🎉'</span>);
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step reveal" id="ajax-retrieve">
+          <div class="step__num">6</div>
+          <div class="step__content">
+            <h2 class="step__title">Retrieve Data via AJAX</h2>
+            <p class="step__desc">
+              Live-load product details, update cart totals, or filter products without page refresh.
+              The server returns JSON, JavaScript updates the DOM.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">routes/web.php — API-style JSON route</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Returns JSON for AJAX requests</span>
+Route::<span class="fn">get</span>(<span class="str">'/api/products/search'</span>, <span class="kw">function</span> (<span class="cl">Request</span> <span class="var">$request</span>) {
+    <span class="var">$products</span> = <span class="cl">Product</span>::<span class="fn">where</span>(<span class="str">'name'</span>, <span class="str">'like'</span>, <span class="str">'%'</span> . <span class="var">$request</span>->q . <span class="str">'%'</span>)
+        -><span class="fn">select</span>(<span class="str">'id'</span>, <span class="str">'name'</span>, <span class="str">'price'</span>, <span class="str">'image'</span>)
+        -><span class="fn">limit</span>(<span class="num">10</span>)
+        -><span class="fn">get</span>();
+
+    <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>(<span class="var">$products</span>);
+});</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">JavaScript — live search with debounce</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre"><span class="kw">let</span> debounceTimer;
+
+document.<span class="fn">getElementById</span>(<span class="str">'search-input'</span>)
+    .<span class="fn">addEventListener</span>(<span class="str">'input'</span>, (e) => {
+        <span class="fn">clearTimeout</span>(debounceTimer);
+        debounceTimer = <span class="fn">setTimeout</span>(<span class="kw">async</span> () => {
+            <span class="kw">const</span> q = e.target.value.<span class="fn">trim</span>();
+            <span class="kw">if</span> (q.<span class="fn">length</span> < <span class="num">2</span>) <span class="kw">return</span>;
+
+            <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/products/search?q=${q}`</span>);
+            <span class="kw">const</span> products = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+            <span class="cm">// Render results into the DOM</span>
+            <span class="kw">const</span> list = document.<span class="fn">getElementById</span>(<span class="str">'search-results'</span>);
+            list.innerHTML = products.<span class="fn">map</span>(p => <span class="str">`
+                &lt;div class="result-item"&gt;
+                    &lt;span&gt;${p.name}&lt;/span&gt;
+                    &lt;span class="price"&gt;₱${p.price}&lt;/span&gt;
+                &lt;/div&gt;
+            `</span>).<span class="fn">join</span>(<span class="str">''</span>);
+        }, <span class="num">300</span>); <span class="cm">// 300ms debounce</span>
+    });</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 7 -->
+        <div class="step reveal" id="admin">
+          <div class="step__num">7</div>
+          <div class="step__content">
+            <h2 class="step__title">Admin Dashboard</h2>
+            <p class="step__desc">
+              The admin area uses <code>Route::resource</code> for full CRUD on products and orders,
+              protected by the <code>admin</code> middleware from Chapter 3.
+            </p>
+
+            <div class="ui-mockup">
+              <div class="ui-mockup__nav">
+                <span class="ui-mockup__nav-brand">⚙️ Admin Panel</span>
+                <div class="ui-mockup__nav-links">
+                  <span>Products</span>
+                  <span>Orders</span>
+                  <span>Users</span>
+                  <span style="color:var(--accent-red)">Logout</span>
+                </div>
+              </div>
+              <div class="ui-mockup__body">
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+                  <div style="background:rgba(255,71,87,0.08);border:1px solid rgba(255,71,87,0.2);border-radius:8px;padding:14px;text-align:center;">
+                    <div style="font-family:var(--font-mono);font-size:1.4rem;font-weight:700;color:var(--accent-red);">142</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Products</div>
+                  </div>
+                  <div style="background:rgba(0,214,143,0.08);border:1px solid rgba(0,214,143,0.2);border-radius:8px;padding:14px;text-align:center;">
+                    <div style="font-family:var(--font-mono);font-size:1.4rem;font-weight:700;color:var(--accent-green);">38</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Orders Today</div>
+                  </div>
+                  <div style="background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);border-radius:8px;padding:14px;text-align:center;">
+                    <div style="font-family:var(--font-mono);font-size:1.4rem;font-weight:700;color:var(--accent-blue);">₱120k</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">Revenue</div>
+                  </div>
+                </div>
+                <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);margin-bottom:8px;">RECENT ORDERS</div>
+                <div class="ui-mockup__card" style="margin-bottom:8px;">
+                  <div style="font-size:0.78rem;flex:1"><span style="color:var(--accent-blue)">#ORD-001</span> — Juan dela Cruz — ₱8,500 — <span style="color:var(--accent-yellow)">Pending</span></div>
+                  <button class="ui-mockup__btn">View</button>
+                </div>
+                <div class="ui-mockup__card">
+                  <div style="font-size:0.78rem;flex:1"><span style="color:var(--accent-blue)">#ORD-002</span> — Maria Santos — ₱14,200 — <span style="color:var(--accent-green)">Shipped</span></div>
+                  <button class="ui-mockup__btn">View</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/Admin/ProductController.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">store</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="var">$validated</span> = <span class="var">$request</span>-><span class="fn">validate</span>([
+        <span class="str">'name'</span>        => <span class="str">'required|string|max:255'</span>,
+        <span class="str">'price'</span>       => <span class="str">'required|numeric|min:0'</span>,
+        <span class="str">'stock'</span>       => <span class="str">'required|integer|min:0'</span>,
+        <span class="str">'category_id'</span> => <span class="str">'required|exists:categories,id'</span>,
+        <span class="str">'image'</span>       => <span class="str">'nullable|image|max:2048'</span>,
+    ]);
+
+    <span class="kw">if</span> (<span class="var">$request</span>-><span class="fn">hasFile</span>(<span class="str">'image'</span>)) {
+        <span class="var">$validated</span>[<span class="str">'image'</span>] = <span class="var">$request</span>
+            -><span class="fn">file</span>(<span class="str">'image'</span>)
+            -><span class="fn">store</span>(<span class="str">'products'</span>, <span class="str">'public'</span>);
+    }
+
+    <span class="cl">Product</span>::<span class="fn">create</span>(<span class="var">$validated</span>);
+
+    <span class="kw">return</span> <span class="fn">redirect</span>()-><span class="fn">route</span>(<span class="str">'admin.products.index'</span>)
+        -><span class="fn">with</span>(<span class="str">'success'</span>, <span class="str">'Product created successfully!'</span>);
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="chapter-nav">
+          <a href="chapter3.html" class="chapter-nav__link">
+            <span class="chapter-nav__label">← Previous</span>
+            <span class="chapter-nav__title">Auth & Login System</span>
+          </a>
+          <a href="chapter5.html" class="chapter-nav__link chapter-nav__link--next">
+            <span class="chapter-nav__label">Next →</span>
+            <span class="chapter-nav__title">Deploy to Public</span>
+          </a>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/canvas.js"></script>
+  <script src="../js/scroll.js"></script>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

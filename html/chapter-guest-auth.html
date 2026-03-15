@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Guest vs Auth Users | Laravel Mastery</title>
+
+<link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <style>
+    /* ── Extra styles specific to this chapter ── */
+    .user-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    @media (max-width: 700px) { .user-split { grid-template-columns: 1fr; } }
+
+    .user-card {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .user-card__header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .user-card--guest .user-card__header { background: rgba(255,211,42,0.07); }
+    .user-card--auth  .user-card__header { background: rgba(0,214,143,0.07); }
+    .user-card__icon { font-size: 1.6rem; }
+    .user-card__label {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .user-card--guest .user-card__label { color: var(--accent-yellow); }
+    .user-card--auth  .user-card__label { color: var(--accent-green); }
+    .user-card__body { padding: 16px 20px; }
+    .user-card__list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .user-card__list li {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      padding-left: 18px;
+      position: relative;
+      line-height: 1.5;
+    }
+    .user-card--guest .user-card__list li::before { content: '○'; position: absolute; left: 0; color: var(--accent-yellow); font-size: 0.7rem; top: 2px; }
+    .user-card--auth  .user-card__list li::before { content: '●'; position: absolute; left: 0; color: var(--accent-green); font-size: 0.7rem; top: 2px; }
+
+    /* page flow diagram */
+    .access-matrix {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin: 20px 0;
+    }
+    .access-matrix th {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border);
+      text-align: left;
+      color: var(--text-secondary);
+    }
+    .access-matrix td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .access-matrix td:first-child {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent-blue);
+    }
+    .access-matrix tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .pill {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+    .pill--yes   { background: rgba(0,214,143,0.12); color: var(--accent-green); border: 1px solid rgba(0,214,143,0.25); }
+    .pill--no    { background: rgba(255,71,87,0.12);  color: var(--accent-red);   border: 1px solid rgba(255,71,87,0.25); }
+    .pill--redir { background: rgba(255,211,42,0.12); color: var(--accent-yellow); border: 1px solid rgba(255,211,42,0.25); }
+
+    /* split nav mockup */
+    .dual-mockup {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+    @media (max-width: 700px) { .dual-mockup { grid-template-columns: 1fr; } }
+
+    .dual-mockup__label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 6px 12px;
+      border-radius: 6px 6px 0 0;
+      text-align: center;
+    }
+    .dual-mockup__label--guest { background: rgba(255,211,42,0.1); color: var(--accent-yellow); }
+    .dual-mockup__label--auth  { background: rgba(0,214,143,0.1);  color: var(--accent-green); }
+
+    /* vertical flow */
+    .vflow { display: flex; flex-direction: column; gap: 0; }
+    .vflow__node {
+      padding: 10px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      position: relative;
+    }
+    .vflow__node--active { border-color: var(--accent-red); color: var(--accent-red); background: rgba(255,71,87,0.07); }
+    .vflow__node--green  { border-color: var(--accent-green); color: var(--accent-green); background: rgba(0,214,143,0.07); }
+    .vflow__node--yellow { border-color: var(--accent-yellow); color: var(--accent-yellow); background: rgba(255,211,42,0.07); }
+    .vflow__arrow {
+      width: 2px;
+      height: 24px;
+      background: var(--border);
+      margin: 0 auto;
+      position: relative;
+    }
+    .vflow__arrow::after {
+      content: '▾';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </a>
+    <div class="nav__links">
+      <a href="chapter1.html">Setup</a>
+      <a href="chapter-folders.html">Folders</a>
+      <a href="chapter2.html">Database</a>
+      <a href="chapter3.html">Auth</a>
+      <a href="chapter-guest-auth.html" style="color:var(--accent-red)">Guest/Auth</a>
+      <a href="chapter4.html">E-Com</a>
+      <a href="chapter5.html">Deploy</a>
+    </div>
+    <a href="../index.html" class="nav__badge" title="Back to Home — Guest/Auth"><span class="nav__badge-num">Ch.3.5</span> · Guest/Auth</a>
+  </nav>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="chapter-page">
+
+    <!-- HERO -->
+    <div class="chapter-hero">
+      <p class="chapter-hero__num">// CHAPTER 03.5 — GUEST & AUTH USERS</p>
+      <h1 class="chapter-hero__title">Handling Guest &amp;<br>Authenticated Users</h1>
+      <p class="chapter-hero__desc">
+        Every web app has two kinds of visitors: <strong style="color:var(--accent-yellow)">guests</strong>
+        who haven't logged in, and <strong style="color:var(--accent-green)">authenticated users</strong>
+        who have. Laravel gives you precise control over what each can see, do, and access —
+        from routes to Blade views to AJAX responses.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <span class="badge badge--yellow">@guest / @auth</span>
+        <span class="badge badge--green">Middleware</span>
+        <span class="badge badge--red">Route Guards</span>
+        <span class="badge badge--blue">Redirects</span>
+      </div>
+    </div>
+
+    <div class="chapter-layout">
+
+      <!-- TOC -->
+      <aside>
+        <div class="toc">
+          <p class="toc__title">// Contents</p>
+          <ul class="toc__list">
+            <li class="toc__item"><a href="#who-is-who">1. Guest vs Auth — The Concept</a></li>
+            <li class="toc__item"><a href="#access-matrix">2. Access Matrix</a></li>
+            <li class="toc__item"><a href="#blade">3. Blade: @guest / @auth</a></li>
+            <li class="toc__item"><a href="#nav-ui">4. Dynamic Nav UI</a></li>
+            <li class="toc__item"><a href="#routes">5. Route Guards</a></li>
+            <li class="toc__item"><a href="#redirect-flow">6. Redirect Logic</a></li>
+            <li class="toc__item"><a href="#controller">7. Controller Checks</a></li>
+            <li class="toc__item"><a href="#ajax-auth">8. AJAX Auth Handling</a></li>
+            <li class="toc__item"><a href="#guest-cart">9. Guest Cart (Session)</a></li>
+            <li class="toc__item"><a href="#merge-cart">10. Merge Cart on Login</a></li>
+            <li class="toc__item"><a href="#middleware-custom">11. Custom Middleware</a></li>
+            <li class="toc__item"><a href="#testing">12. Testing Both States</a></li>
+          </ul>
+        </div>
+      </aside>
+
+      <main>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 1 -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="who-is-who">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <h2 class="step__title">Guest vs Authenticated — The Concept</h2>
+            <p class="step__desc">
+              In Laravel, every HTTP request arrives in one of two states. Understanding this
+              split is the foundation of everything that follows.
+            </p>
+
+            <div class="user-split">
+              <div class="user-card user-card--guest">
+                <div class="user-card__header">
+                  <span class="user-card__icon">👤</span>
+                  <div>
+                    <div class="user-card__label">Guest User</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);font-family:var(--font-mono);">auth()->check() === false</div>
+                  </div>
+                </div>
+                <div class="user-card__body">
+                  <ul class="user-card__list">
+                    <li>Has not logged in or registered</li>
+                    <li>Can browse products & public pages</li>
+                    <li>Can add to a session-based cart</li>
+                    <li>Cannot checkout or place orders</li>
+                    <li>Sees Login / Register in the nav</li>
+                    <li>Redirected to /login on protected routes</li>
+                    <li>Gets HTTP 401/403 on protected API calls</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="user-card user-card--auth">
+                <div class="user-card__header">
+                  <span class="user-card__icon">🔓</span>
+                  <div>
+                    <div class="user-card__label">Authenticated User</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);font-family:var(--font-mono);">auth()->check() === true</div>
+                  </div>
+                </div>
+                <div class="user-card__body">
+                  <ul class="user-card__list">
+                    <li>Has logged in via login form</li>
+                    <li>Can browse all public pages</li>
+                    <li>Can checkout and place orders</li>
+                    <li>Sees their name, cart & dashboard in nav</li>
+                    <li>Session-cart is merged on first login</li>
+                    <li>Redirected from /login back to dashboard</li>
+                    <li>Can access their order history & profile</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">How Laravel detects auth state — anywhere in your code</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Check if user is logged in</span>
+<span class="fn">auth</span>()-><span class="fn">check</span>()     <span class="cm">// → true  (auth user)</span>
+<span class="fn">auth</span>()-><span class="fn">guest</span>()     <span class="cm">// → true  (guest — NOT logged in)</span>
+
+<span class="cm">// Get the current user (returns null for guests)</span>
+<span class="fn">auth</span>()-><span class="fn">user</span>()      <span class="cm">// → User model | null</span>
+<span class="fn">auth</span>()-><span class="fn">id</span>()        <span class="cm">// → int | null</span>
+
+<span class="cm">// Facade style (identical)</span>
+<span class="cl">Auth</span>::<span class="fn">check</span>()
+<span class="cl">Auth</span>::<span class="fn">user</span>()
+<span class="cl">Auth</span>::<span class="fn">id</span>()</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 2 — ACCESS MATRIX -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="access-matrix">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <h2 class="step__title">Access Matrix — What Each User Can Do</h2>
+            <p class="step__desc">
+              Here's a full breakdown of every page/action in the e-commerce app and who can access it:
+            </p>
+
+            <table class="access-matrix">
+              <thead>
+                <tr>
+                  <th>Page / Action</th>
+                  <th>Guest 👤</th>
+                  <th>Auth User 🔓</th>
+                  <th>Admin ⚙️</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>/ — Homepage</td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                </tr>
+                <tr>
+                  <td>/products — Browse products</td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                </tr>
+                <tr>
+                  <td>/products/{id} — Product detail</td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                </tr>
+                <tr>
+                  <td>/cart — View cart</td>
+                  <td><span class="pill pill--yes">✓ Session cart</span></td>
+                  <td><span class="pill pill--yes">✓ DB cart</span></td>
+                  <td><span class="pill pill--yes">✓ DB cart</span></td>
+                </tr>
+                <tr>
+                  <td>POST /cart/add — Add to cart</td>
+                  <td><span class="pill pill--yes">✓ Session</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                </tr>
+                <tr>
+                  <td>/checkout — Checkout page</td>
+                  <td><span class="pill pill--redir">→ /login</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                </tr>
+                <tr>
+                  <td>POST /orders — Place order</td>
+                  <td><span class="pill pill--no">✗ 401</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                </tr>
+                <tr>
+                  <td>/orders — My order history</td>
+                  <td><span class="pill pill--redir">→ /login</span></td>
+                  <td><span class="pill pill--yes">✓ Own orders</span></td>
+                  <td><span class="pill pill--yes">✓ All orders</span></td>
+                </tr>
+                <tr>
+                  <td>/profile — Edit profile</td>
+                  <td><span class="pill pill--redir">→ /login</span></td>
+                  <td><span class="pill pill--yes">✓ Own profile</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                </tr>
+                <tr>
+                  <td>/dashboard — Dashboard</td>
+                  <td><span class="pill pill--redir">→ /login</span></td>
+                  <td><span class="pill pill--yes">✓ User panel</span></td>
+                  <td><span class="pill pill--yes">✓ Admin panel</span></td>
+                </tr>
+                <tr>
+                  <td>/admin/products — Manage products</td>
+                  <td><span class="pill pill--no">✗ 403</span></td>
+                  <td><span class="pill pill--no">✗ 403</span></td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                </tr>
+                <tr>
+                  <td>/login — Login page</td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--redir">→ /dashboard</span></td>
+                  <td><span class="pill pill--redir">→ /dashboard</span></td>
+                </tr>
+                <tr>
+                  <td>/register — Register page</td>
+                  <td><span class="pill pill--yes">✓ Allowed</span></td>
+                  <td><span class="pill pill--redir">→ /dashboard</span></td>
+                  <td><span class="pill pill--redir">→ /dashboard</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 3 — BLADE -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="blade">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <h2 class="step__title">Blade Directives: @guest &amp; @auth</h2>
+            <p class="step__desc">
+              The simplest way to show different content to guests vs logged-in users is
+              Blade's built-in directives. They work anywhere in your <code>.blade.php</code> files.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Basic @guest / @auth</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">{{-- Show content ONLY to logged-in users --}}</span>
+<span class="tag-hl">@auth</span>
+    <span class="tag-hl">&lt;p&gt;</span>Welcome back, <span class="tag-hl">{{ auth()-&gt;user()-&gt;name }}</span>!<span class="tag-hl">&lt;/p&gt;</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"{{ route('dashboard') }}"</span><span class="tag-hl">&gt;</span>My Dashboard<span class="tag-hl">&lt;/a&gt;</span>
+<span class="tag-hl">@endauth</span>
+
+<span class="cm">{{-- Show content ONLY to guests (not logged in) --}}</span>
+<span class="tag-hl">@guest</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"{{ route('login') }}"</span><span class="tag-hl">&gt;</span>Login<span class="tag-hl">&lt;/a&gt;</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"{{ route('register') }}"</span><span class="tag-hl">&gt;</span>Register<span class="tag-hl">&lt;/a&gt;</span>
+<span class="tag-hl">@endguest</span>
+
+<span class="cm">{{-- Combined: if/else pattern --}}</span>
+<span class="tag-hl">@auth</span>
+    <span class="tag-hl">&lt;span&gt;</span>Hello, <span class="tag-hl">{{ auth()-&gt;user()-&gt;name }}</span><span class="tag-hl">&lt;/span&gt;</span>
+<span class="tag-hl">@else</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"{{ route('login') }}"</span><span class="tag-hl">&gt;</span>Login<span class="tag-hl">&lt;/a&gt;</span>
+<span class="tag-hl">@endauth</span></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Show "Add to Cart" vs "Login to Buy" button</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">{{-- On the product detail page --}}</span>
+<span class="tag-hl">@auth</span>
+    <span class="cm">{{-- Authenticated: show functional AJAX cart button --}}</span>
+    <span class="tag-hl">&lt;button</span>
+        <span class="attr-hl">class</span>=<span class="str">"btn-add-cart"</span>
+        <span class="attr-hl">data-id</span>=<span class="str">"{{ $product-&gt;id }}"</span><span class="tag-hl">&gt;</span>
+        🛒 Add to Cart
+    <span class="tag-hl">&lt;/button&gt;</span>
+<span class="tag-hl">@else</span>
+    <span class="cm">{{-- Guest: prompt them to login first --}}</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"{{ route('login') }}"</span>
+       <span class="attr-hl">class</span>=<span class="str">"btn btn--ghost"</span><span class="tag-hl">&gt;</span>
+        🔒 Login to Purchase
+    <span class="tag-hl">&lt;/a&gt;</span>
+    <span class="cm">{{-- OR allow guest cart (covered in Step 9) --}}</span>
+<span class="tag-hl">@endauth</span></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Check specific role inside Blade</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">{{-- Only show admin link to admin users --}}</span>
+<span class="tag-hl">@auth</span>
+    <span class="tag-hl">@if</span> (auth()-&gt;user()-&gt;role === <span class="str">'admin'</span>)
+        <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/admin"</span><span class="tag-hl">&gt;</span>⚙️ Admin Panel<span class="tag-hl">&lt;/a&gt;</span>
+    <span class="tag-hl">@endif</span>
+<span class="tag-hl">@endauth</span>
+
+<span class="cm">{{-- Using @can (Laravel Policies / Gates) --}}</span>
+<span class="tag-hl">@can</span>(<span class="str">'manage-products'</span>)
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/admin/products"</span><span class="tag-hl">&gt;</span>Manage Products<span class="tag-hl">&lt;/a&gt;</span>
+<span class="tag-hl">@endcan</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 4 — DYNAMIC NAV UI -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="nav-ui">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <h2 class="step__title">Dynamic Navigation UI</h2>
+            <p class="step__desc">
+              The navbar should look completely different depending on whether the visitor is
+              a guest or a logged-in user. Here's how both states look:
+            </p>
+
+            <div class="dual-mockup">
+              <div>
+                <div class="dual-mockup__label dual-mockup__label--guest">👤 Guest View</div>
+                <div class="ui-mockup">
+                  <div class="ui-mockup__nav" style="flex-wrap:wrap;gap:8px;">
+                    <span class="ui-mockup__nav-brand">🛒 LaravelShop</span>
+                    <div class="ui-mockup__nav-links">
+                      <span>Products</span>
+                      <span style="padding:4px 10px;border:1px solid rgba(255,211,42,0.4);border-radius:6px;color:var(--accent-yellow);font-size:0.72rem;">Login</span>
+                      <span style="padding:4px 10px;background:linear-gradient(135deg,var(--accent-red),var(--accent-orange));border-radius:6px;color:white;font-size:0.72rem;">Register</span>
+                    </div>
+                  </div>
+                  <div class="ui-mockup__body" style="padding:12px 20px;">
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Cart icon: no badge (or session count)</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">No dashboard or profile link visible</div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="dual-mockup__label dual-mockup__label--auth">🔓 Auth User View</div>
+                <div class="ui-mockup">
+                  <div class="ui-mockup__nav" style="flex-wrap:wrap;gap:8px;">
+                    <span class="ui-mockup__nav-brand">🛒 LaravelShop</span>
+                    <div class="ui-mockup__nav-links">
+                      <span>Products</span>
+                      <span style="color:var(--accent-green);">🛒 Cart (3)</span>
+                      <span style="padding:4px 10px;background:rgba(0,214,143,0.1);border:1px solid rgba(0,214,143,0.3);border-radius:6px;color:var(--accent-green);font-size:0.72rem;">Juan ▾</span>
+                    </div>
+                  </div>
+                  <div class="ui-mockup__body" style="padding:12px 20px;">
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Dropdown: Dashboard, Orders, Profile, Logout</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">Cart badge shows live count</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/views/layouts/nav.blade.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="tag-hl">&lt;nav&gt;</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/"</span> <span class="attr-hl">class</span>=<span class="str">"brand"</span><span class="tag-hl">&gt;</span>🛒 LaravelShop<span class="tag-hl">&lt;/a&gt;</span>
+
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/products"</span><span class="tag-hl">&gt;</span>Products<span class="tag-hl">&lt;/a&gt;</span>
+
+    <span class="cm">{{-- Cart (works for both guest and auth) --}}</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/cart"</span><span class="tag-hl">&gt;</span>
+        🛒
+        <span class="tag-hl">&lt;span</span> <span class="attr-hl">id</span>=<span class="str">"cart-badge"</span><span class="tag-hl">&gt;</span>
+            {{ count(session('cart', [])) }}
+        <span class="tag-hl">&lt;/span&gt;</span>
+    <span class="tag-hl">&lt;/a&gt;</span>
+
+    <span class="tag-hl">@auth</span>
+        <span class="cm">{{-- Authenticated: show user dropdown --}}</span>
+        <span class="tag-hl">&lt;div</span> <span class="attr-hl">class</span>=<span class="str">"dropdown"</span><span class="tag-hl">&gt;</span>
+            <span class="tag-hl">&lt;button&gt;</span>{{ auth()-&gt;user()-&gt;name }} ▾<span class="tag-hl">&lt;/button&gt;</span>
+            <span class="tag-hl">&lt;div</span> <span class="attr-hl">class</span>=<span class="str">"dropdown-menu"</span><span class="tag-hl">&gt;</span>
+                <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/dashboard"</span><span class="tag-hl">&gt;</span>Dashboard<span class="tag-hl">&lt;/a&gt;</span>
+                <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/orders"</span><span class="tag-hl">&gt;</span>My Orders<span class="tag-hl">&lt;/a&gt;</span>
+                <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/profile"</span><span class="tag-hl">&gt;</span>Profile<span class="tag-hl">&lt;/a&gt;</span>
+                <span class="tag-hl">@if</span>(auth()-&gt;user()-&gt;role === <span class="str">'admin'</span>)
+                    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/admin"</span><span class="tag-hl">&gt;</span>⚙️ Admin<span class="tag-hl">&lt;/a&gt;</span>
+                <span class="tag-hl">@endif</span>
+                <span class="cm">{{-- Logout is a POST, use a form --}}</span>
+                <span class="tag-hl">&lt;form</span> <span class="attr-hl">method</span>=<span class="str">"POST"</span> <span class="attr-hl">action</span>=<span class="str">"/logout"</span><span class="tag-hl">&gt;</span>
+                    <span class="tag-hl">@csrf</span>
+                    <span class="tag-hl">&lt;button</span> <span class="attr-hl">type</span>=<span class="str">"submit"</span><span class="tag-hl">&gt;</span>Logout<span class="tag-hl">&lt;/button&gt;</span>
+                <span class="tag-hl">&lt;/form&gt;</span>
+            <span class="tag-hl">&lt;/div&gt;</span>
+        <span class="tag-hl">&lt;/div&gt;</span>
+    <span class="tag-hl">@else</span>
+        <span class="cm">{{-- Guest: show Login + Register --}}</span>
+        <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/login"</span><span class="tag-hl">&gt;</span>Login<span class="tag-hl">&lt;/a&gt;</span>
+        <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/register"</span><span class="tag-hl">&gt;</span>Register<span class="tag-hl">&lt;/a&gt;</span>
+    <span class="tag-hl">@endauth</span>
+<span class="tag-hl">&lt;/nav&gt;</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 5 — ROUTE GUARDS -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="routes">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <h2 class="step__title">Route Guards — auth &amp; guest Middleware</h2>
+            <p class="step__desc">
+              Laravel ships with two key middleware aliases for this exact purpose:
+              <code>auth</code> blocks guests, <code>guest</code> redirects already-logged-in users away
+              from login/register pages.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">routes/web.php — complete route structure</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">use</span> <span class="cl">App\Http\Controllers</span>;
+
+<span class="cm">// ── PUBLIC ROUTES (guests AND auth users) ──────────</span>
+Route::<span class="fn">get</span>(<span class="str">'/'</span>,                [<span class="cl">HomeController</span>::<span class="kw">class</span>,    <span class="str">'index'</span>]);
+Route::<span class="fn">get</span>(<span class="str">'/products'</span>,       [<span class="cl">ProductController</span>::<span class="kw">class</span>, <span class="str">'index'</span>]);
+Route::<span class="fn">get</span>(<span class="str">'/products/{id}'</span>, [<span class="cl">ProductController</span>::<span class="kw">class</span>, <span class="str">'show'</span>]);
+Route::<span class="fn">get</span>(<span class="str">'/cart'</span>,          [<span class="cl">CartController</span>::<span class="kw">class</span>,    <span class="str">'index'</span>]);
+Route::<span class="fn">post</span>(<span class="str">'/cart/add/{product}'</span>, [<span class="cl">CartController</span>::<span class="kw">class</span>, <span class="str">'add'</span>]);
+
+<span class="cm">// ── GUEST-ONLY ROUTES (redirect auth users away) ───</span>
+<span class="cm">// If a logged-in user visits /login, redirect to /dashboard</span>
+Route::<span class="fn">middleware</span>(<span class="str">'guest'</span>)-><span class="fn">group</span>(<span class="kw">function</span> () {
+    Route::<span class="fn">get</span>(<span class="str">'/login'</span>,    [<span class="cl">LoginController</span>::<span class="kw">class</span>, <span class="str">'showForm'</span>]);
+    Route::<span class="fn">post</span>(<span class="str">'/login'</span>,   [<span class="cl">LoginController</span>::<span class="kw">class</span>, <span class="str">'login'</span>]);
+    Route::<span class="fn">get</span>(<span class="str">'/register'</span>, [<span class="cl">RegisterController</span>::<span class="kw">class</span>, <span class="str">'showForm'</span>]);
+    Route::<span class="fn">post</span>(<span class="str">'/register'</span>,[<span class="cl">RegisterController</span>::<span class="kw">class</span>, <span class="str">'register'</span>]);
+});
+
+<span class="cm">// ── AUTH-REQUIRED ROUTES (redirect guests to /login) </span>
+Route::<span class="fn">middleware</span>(<span class="str">'auth'</span>)-><span class="fn">group</span>(<span class="kw">function</span> () {
+    Route::<span class="fn">post</span>(<span class="str">'/logout'</span>,       [<span class="cl">LoginController</span>::<span class="kw">class</span>, <span class="str">'logout'</span>]);
+    Route::<span class="fn">get</span>(<span class="str">'/dashboard'</span>,     [<span class="cl">DashboardController</span>::<span class="kw">class</span>, <span class="str">'index'</span>]);
+    Route::<span class="fn">get</span>(<span class="str">'/orders'</span>,        [<span class="cl">OrderController</span>::<span class="kw">class</span>, <span class="str">'index'</span>]);
+    Route::<span class="fn">post</span>(<span class="str">'/orders'</span>,       [<span class="cl">OrderController</span>::<span class="kw">class</span>, <span class="str">'store'</span>]);
+    Route::<span class="fn">get</span>(<span class="str">'/checkout'</span>,      [<span class="cl">CheckoutController</span>::<span class="kw">class</span>, <span class="str">'index'</span>]);
+    Route::<span class="fn">get</span>(<span class="str">'/profile'</span>,       [<span class="cl">ProfileController</span>::<span class="kw">class</span>, <span class="str">'edit'</span>]);
+    Route::<span class="fn">patch</span>(<span class="str">'/profile'</span>,     [<span class="cl">ProfileController</span>::<span class="kw">class</span>, <span class="str">'update'</span>]);
+});
+
+<span class="cm">// ── ADMIN-ONLY ROUTES ──────────────────────────────</span>
+Route::<span class="fn">middleware</span>([<span class="str">'auth'</span>, <span class="str">'admin'</span>])-><span class="fn">prefix</span>(<span class="str">'admin'</span>)-><span class="fn">group</span>(<span class="kw">function</span> () {
+    Route::<span class="fn">resource</span>(<span class="str">'products'</span>, <span class="cl">Admin\ProductController</span>::<span class="kw">class</span>);
+    Route::<span class="fn">resource</span>(<span class="str">'orders'</span>,   <span class="cl">Admin\OrderController</span>::<span class="kw">class</span>);
+    Route::<span class="fn">resource</span>(<span class="str">'users'</span>,    <span class="cl">Admin\UserController</span>::<span class="kw">class</span>);
+});</pre>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">💡</div>
+              <div class="info-box__text">
+                <strong>Where does <code>guest</code> middleware redirect to?</strong> By default it redirects
+                to <code>/dashboard</code> (or whatever <code>HOME</code> is set to in
+                <code>RouteServiceProvider.php</code>). You can change it there.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 6 — REDIRECT FLOW -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="redirect-flow">
+          <div class="step__num">6</div>
+          <div class="step__content">
+            <h2 class="step__title">Redirect Logic — What Happens When?</h2>
+            <p class="step__desc">
+              Understanding the automatic redirect chains helps you debug unexpected behavior.
+            </p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+              <div>
+                <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-yellow);margin-bottom:12px;">GUEST tries to visit /checkout</div>
+                <div class="vflow">
+                  <div class="vflow__node vflow__node--yellow">GET /checkout (guest)</div>
+                  <div class="vflow__arrow"></div>
+                  <div class="vflow__node vflow__node--active">auth middleware fires</div>
+                  <div class="vflow__arrow"></div>
+                  <div class="vflow__node">auth()->check() = false</div>
+                  <div class="vflow__arrow"></div>
+                  <div class="vflow__node vflow__node--active">Redirect → /login<br><span style="font-size:0.68rem;opacity:0.7;">intended URL saved in session</span></div>
+                  <div class="vflow__arrow"></div>
+                  <div class="vflow__node">User logs in</div>
+                  <div class="vflow__arrow"></div>
+                  <div class="vflow__node vflow__node--green">redirect()->intended()<br>→ back to /checkout ✓</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-green);margin-bottom:12px;">AUTH USER tries to visit /login</div>
+                <div class="vflow">
+                  <div class="vflow__node vflow__node--green">GET /login (auth user)</div>
+                  <div class="vflow__arrow"></div>
+                  <div class="vflow__node vflow__node--active">guest middleware fires</div>
+                  <div class="vflow__arrow"></div>
+                  <div class="vflow__node">auth()->check() = true</div>
+                  <div class="vflow__arrow"></div>
+                  <div class="vflow__node vflow__node--green">Redirect → /dashboard<br><span style="font-size:0.68rem;opacity:0.7;">(RouteServiceProvider::HOME)</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block" style="margin-top:24px;">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Providers/RouteServiceProvider.php — change HOME</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">class</span> <span class="cl">RouteServiceProvider</span> <span class="kw">extends</span> <span class="cl">ServiceProvider</span>
+{
+    <span class="cm">// Change this to redirect auth users away from /login</span>
+    <span class="kw">public const</span> HOME = <span class="str">'/dashboard'</span>;
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Use redirect()->intended() in your LoginController</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">if</span> (<span class="cl">Auth</span>::<span class="fn">attempt</span>(<span class="var">$credentials</span>)) {
+    <span class="var">$request</span>-><span class="fn">session</span>()-><span class="fn">regenerate</span>();
+
+    <span class="cm">// This sends the user back to where they were trying to go</span>
+    <span class="cm">// before being redirected to /login — e.g. /checkout</span>
+    <span class="kw">return</span> <span class="fn">redirect</span>()-><span class="fn">intended</span>(<span class="str">'/dashboard'</span>);
+    <span class="cm">// Falls back to /dashboard if no intended URL was saved</span>
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 7 — CONTROLLER CHECKS -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="controller">
+          <div class="step__num">7</div>
+          <div class="step__content">
+            <h2 class="step__title">Controller-Level Auth Checks</h2>
+            <p class="step__desc">
+              Sometimes you need finer control within a single controller method — showing different
+              data or behavior depending on auth state, without redirecting the user away.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/ProductController.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre"><span class="kw">public function</span> <span class="fn">show</span>(<span class="cl">Product</span> <span class="var">$product</span>)
+{
+    <span class="var">$data</span> = [<span class="str">'product'</span> => <span class="var">$product</span>];
+
+    <span class="kw">if</span> (<span class="fn">auth</span>()-><span class="fn">check</span>()) {
+        <span class="cm">// Logged in: show whether they've wishlisted this product</span>
+        <span class="var">$data</span>[<span class="str">'isWishlisted'</span>] = <span class="fn">auth</span>()-><span class="fn">user</span>()
+            ->wishlist
+            -><span class="fn">contains</span>(<span class="var">$product</span>->id);
+
+        <span class="cm">// Show personalised price (e.g. member discount)</span>
+        <span class="var">$data</span>[<span class="str">'price'</span>] = <span class="var">$product</span>->getMemberPrice(<span class="fn">auth</span>()-><span class="fn">user</span>());
+    } <span class="kw">else</span> {
+        <span class="cm">// Guest: default price, no wishlist data</span>
+        <span class="var">$data</span>[<span class="str">'isWishlisted'</span>] = <span class="kw">false</span>;
+        <span class="var">$data</span>[<span class="str">'price'</span>]       = <span class="var">$product</span>->price;
+    }
+
+    <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'products.show'</span>, <span class="var">$data</span>);
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Abort with 403 for unauthorized access</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">show</span>(<span class="cl">Order</span> <span class="var">$order</span>)
+{
+    <span class="cm">// Make sure auth user can only see THEIR OWN orders</span>
+    <span class="kw">if</span> (<span class="fn">auth</span>()-><span class="fn">id</span>() !== <span class="var">$order</span>->user_id) {
+        <span class="fn">abort</span>(<span class="num">403</span>, <span class="str">'You do not have access to this order.'</span>);
+    }
+
+    <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'orders.show'</span>, <span class="fn">compact</span>(<span class="str">'order'</span>));
+}
+
+<span class="cm">// Cleaner with authorize() (uses Policies):</span>
+<span class="kw">public function</span> <span class="fn">show</span>(<span class="cl">Order</span> <span class="var">$order</span>)
+{
+    <span class="var">$this</span>-><span class="fn">authorize</span>(<span class="str">'view'</span>, <span class="var">$order</span>); <span class="cm">// throws 403 if not owner</span>
+    <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'orders.show'</span>, <span class="fn">compact</span>(<span class="str">'order'</span>));
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 8 — AJAX AUTH HANDLING -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="ajax-auth">
+          <div class="step__num">8</div>
+          <div class="step__content">
+            <h2 class="step__title">AJAX Auth Handling — JSON Responses</h2>
+            <p class="step__desc">
+              When a guest makes an AJAX request to a protected route, a normal redirect response
+              won't work in JavaScript. You need to return a <code>401</code> JSON response
+              and handle it on the frontend.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Middleware/Authenticate.php — detect AJAX</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">protected function</span> <span class="fn">redirectTo</span>(<span class="cl">Request</span> <span class="var">$request</span>): ?<span class="kw">string</span>
+{
+    <span class="cm">// If it's an AJAX/JSON request → return null (401 JSON)</span>
+    <span class="cm">// If it's a normal page request → redirect to /login</span>
+    <span class="kw">return</span> <span class="var">$request</span>-><span class="fn">expectsJson</span>()
+        ? <span class="kw">null</span>
+        : <span class="fn">route</span>(<span class="str">'login'</span>);
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">JavaScript — handle 401 from AJAX cart request</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre"><span class="kw">async function</span> <span class="fn">addToCart</span>(productId) {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/cart/add/${productId}`</span>, {
+        method: <span class="str">'POST'</span>,
+        headers: {
+            <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+            <span class="str">'X-CSRF-TOKEN'</span>: <span class="fn">getCsrfToken</span>(),
+            <span class="str">'Accept'</span>: <span class="str">'application/json'</span>, <span class="cm">// ← CRITICAL for expectsJson()</span>
+        },
+        body: <span class="cl">JSON</span>.<span class="fn">stringify</span>({ quantity: <span class="num">1</span> }),
+    });
+
+    <span class="kw">if</span> (res.status === <span class="num">401</span>) {
+        <span class="cm">// Guest tried a protected action — prompt to login</span>
+        <span class="fn">showLoginPrompt</span>(<span class="str">'Please log in to add items to your cart.'</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">if</span> (res.status === <span class="num">403</span>) {
+        <span class="fn">showToast</span>(<span class="str">'You don\'t have permission to do that.'</span>, <span class="str">'error'</span>);
+        <span class="kw">return</span>;
+    }
+
+    <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+    <span class="cm">// Update cart badge, etc...</span>
+    document.<span class="fn">getElementById</span>(<span class="str">'cart-badge'</span>).textContent = data.cartCount;
+}
+
+<span class="cm">// Modal/toast prompt telling guest to login</span>
+<span class="kw">function</span> <span class="fn">showLoginPrompt</span>(message) {
+    <span class="kw">const</span> modal = document.<span class="fn">getElementById</span>(<span class="str">'login-modal'</span>);
+    modal.<span class="fn">querySelector</span>(<span class="str">'.modal-message'</span>).textContent = message;
+    modal.style.display = <span class="str">'flex'</span>;
+}</pre>
+            </div>
+
+            <div class="info-box info-box--info">
+              <div class="info-box__icon">📌</div>
+              <div class="info-box__text">
+                <strong>Always send <code>Accept: application/json</code></strong> in your AJAX headers.
+                Laravel checks <code>$request->expectsJson()</code> to decide whether to return a redirect
+                (for browser requests) or a 401 JSON error (for AJAX/API requests).
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 9 — GUEST CART -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="guest-cart">
+          <div class="step__num">9</div>
+          <div class="step__content">
+            <h2 class="step__title">Guest Cart with Sessions</h2>
+            <p class="step__desc">
+              A great UX improvement: let guests add items to a cart using PHP sessions
+              before they register. We'll merge this into their DB cart upon login.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/CartController.php — works for both</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">add</span>(<span class="cl">Request</span> <span class="var">$request</span>, <span class="cl">Product</span> <span class="var">$product</span>)
+{
+    <span class="cm">// Works for BOTH guests (session) and auth users (session)</span>
+    <span class="var">$cart</span> = <span class="fn">session</span>(<span class="str">'cart'</span>, []);
+    <span class="var">$id</span>   = <span class="var">$product</span>->id;
+
+    <span class="var">$cart</span>[<span class="var">$id</span>] = [
+        <span class="str">'name'</span>     => <span class="var">$product</span>->name,
+        <span class="str">'price'</span>    => <span class="var">$product</span>->price,
+        <span class="str">'image'</span>    => <span class="var">$product</span>->image,
+        <span class="str">'quantity'</span> => (<span class="var">$cart</span>[<span class="var">$id</span>][<span class="str">'quantity'</span>] ?? <span class="num">0</span>) + <span class="num">1</span>,
+    ];
+
+    <span class="fn">session</span>([<span class="str">'cart'</span> => <span class="var">$cart</span>]);
+
+    <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([
+        <span class="str">'message'</span>   => <span class="str">'Added!'</span>,
+        <span class="str">'cartCount'</span> => <span class="fn">count</span>(<span class="var">$cart</span>),
+    ]);
+}
+
+<span class="kw">public function</span> <span class="fn">index</span>()
+{
+    <span class="cm">// Both guests and auth users see the same cart view</span>
+    <span class="var">$cart</span>  = <span class="fn">session</span>(<span class="str">'cart'</span>, []);
+    <span class="var">$total</span> = <span class="fn">collect</span>(<span class="var">$cart</span>)-><span class="fn">sum</span>(
+        <span class="kw">fn</span>(<span class="var">$item</span>) => <span class="var">$item</span>[<span class="str">'price'</span>] * <span class="var">$item</span>[<span class="str">'quantity'</span>]
+    );
+
+    <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'cart.index'</span>, <span class="fn">compact</span>(<span class="str">'cart'</span>, <span class="str">'total'</span>));
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/views/cart/index.blade.php — guest checkout prompt</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="tag-hl">@if</span>(count($cart) > 0)
+    <span class="cm">{{-- Show cart items --}}</span>
+    <span class="tag-hl">@foreach</span>($cart <span class="kw">as</span> $id => $item)
+        <span class="tag-hl">&lt;div</span> <span class="attr-hl">class</span>=<span class="str">"cart-item"</span><span class="tag-hl">&gt;</span>
+            {{ $item['name'] }} × {{ $item['quantity'] }}
+            — ₱{{ number_format($item['price'] * $item['quantity'], 2) }}
+        <span class="tag-hl">&lt;/div&gt;</span>
+    <span class="tag-hl">@endforeach</span>
+
+    <span class="cm">{{-- Checkout button: different for guest vs auth --}}</span>
+    <span class="tag-hl">@auth</span>
+        <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/checkout"</span> <span class="attr-hl">class</span>=<span class="str">"btn btn--primary"</span><span class="tag-hl">&gt;</span>
+            Proceed to Checkout →
+        <span class="tag-hl">&lt;/a&gt;</span>
+    <span class="tag-hl">@else</span>
+        <span class="tag-hl">&lt;div</span> <span class="attr-hl">class</span>=<span class="str">"checkout-prompt"</span><span class="tag-hl">&gt;</span>
+            <span class="tag-hl">&lt;p&gt;</span>You need an account to complete your order.<span class="tag-hl">&lt;/p&gt;</span>
+            <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/login?redirect=checkout"</span> <span class="attr-hl">class</span>=<span class="str">"btn btn--primary"</span><span class="tag-hl">&gt;</span>
+                Login to Checkout
+            <span class="tag-hl">&lt;/a&gt;</span>
+            <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/register"</span> <span class="attr-hl">class</span>=<span class="str">"btn btn--ghost"</span><span class="tag-hl">&gt;</span>
+                Create Free Account
+            <span class="tag-hl">&lt;/a&gt;</span>
+        <span class="tag-hl">&lt;/div&gt;</span>
+    <span class="tag-hl">@endauth</span>
+<span class="tag-hl">@else</span>
+    <span class="tag-hl">&lt;p&gt;</span>Your cart is empty. <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"/products"</span><span class="tag-hl">&gt;</span>Shop now<span class="tag-hl">&lt;/a&gt;</span><span class="tag-hl">&lt;/p&gt;</span>
+<span class="tag-hl">@endif</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 10 — MERGE CART ON LOGIN -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="merge-cart">
+          <div class="step__num">10</div>
+          <div class="step__content">
+            <h2 class="step__title">Merge Guest Cart on Login</h2>
+            <p class="step__desc">
+              When a guest with items in their session cart logs in, we should
+              preserve those items rather than losing them. Hook into Laravel's
+              <code>Login</code> event to do this automatically.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Listeners/MergeCartOnLogin.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre"><span class="kw">namespace</span> <span class="cl">App\Listeners</span>;
+
+<span class="kw">use</span> <span class="cl">Illuminate\Auth\Events\Login</span>;
+<span class="kw">use</span> <span class="cl">Illuminate\Http\Request</span>;
+
+<span class="kw">class</span> <span class="cl">MergeCartOnLogin</span>
+{
+    <span class="kw">public function</span> <span class="fn">__construct</span>(<span class="kw">private</span> <span class="cl">Request</span> <span class="var">$request</span>) {}
+
+    <span class="kw">public function</span> <span class="fn">handle</span>(<span class="cl">Login</span> <span class="var">$event</span>): <span class="kw">void</span>
+    {
+        <span class="var">$guestCart</span> = <span class="var">$this</span>->request-><span class="fn">session</span>()-><span class="fn">get</span>(<span class="str">'cart'</span>, []);
+
+        <span class="kw">if</span> (<span class="fn">empty</span>(<span class="var">$guestCart</span>)) <span class="kw">return</span>; <span class="cm">// Nothing to merge</span>
+
+        <span class="cm">// Get the newly-logged-in user</span>
+        <span class="var">$user</span> = <span class="var">$event</span>->user;
+
+        <span class="cm">// If you store cart in DB, merge here:</span>
+        <span class="kw">foreach</span> (<span class="var">$guestCart</span> <span class="kw">as</span> <span class="var">$productId</span> => <span class="var">$item</span>) {
+            <span class="var">$user</span>->cartItems()-><span class="fn">updateOrCreate</span>(
+                [<span class="str">'product_id'</span> => <span class="var">$productId</span>],
+                [<span class="str">'quantity'</span> => <span class="cl">DB</span>::<span class="fn">raw</span>(<span class="str">'quantity + '</span> . <span class="var">$item</span>[<span class="str">'quantity'</span>])]
+            );
+        }
+
+        <span class="cm">// Clear the session cart after merge</span>
+        <span class="var">$this</span>->request-><span class="fn">session</span>()-><span class="fn">forget</span>(<span class="str">'cart'</span>);
+    }
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Providers/EventServiceProvider.php — register the listener</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre"><span class="kw">use</span> <span class="cl">Illuminate\Auth\Events\Login</span>;
+<span class="kw">use</span> <span class="cl">App\Listeners\MergeCartOnLogin</span>;
+
+<span class="kw">protected</span> <span class="var">$listen</span> = [
+    <span class="cl">Login</span>::<span class="kw">class</span> => [
+        <span class="cl">MergeCartOnLogin</span>::<span class="kw">class</span>,
+    ],
+];</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 11 — CUSTOM MIDDLEWARE -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="middleware-custom">
+          <div class="step__num">11</div>
+          <div class="step__content">
+            <h2 class="step__title">Custom Middleware for Complex Rules</h2>
+            <p class="step__desc">
+              Sometimes you need rules beyond simple auth/guest — like "only verified email users"
+              or "only users who've completed their profile". Middleware is the right place for these.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — create middleware</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> php artisan make:middleware EnsureEmailIsVerified
+<span class="t-prompt">$</span> php artisan make:middleware EnsureProfileComplete
+<span class="t-prompt">$</span> php artisan make:middleware AdminMiddleware</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Middleware/EnsureProfileComplete.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">handle</span>(<span class="cl">Request</span> <span class="var">$request</span>, <span class="cl">Closure</span> <span class="var">$next</span>): <span class="cl">Response</span>
+{
+    <span class="var">$user</span> = <span class="fn">auth</span>()-><span class="fn">user</span>();
+
+    <span class="cm">// Guest? Let auth middleware handle it</span>
+    <span class="kw">if</span> (!<span class="var">$user</span>) <span class="kw">return</span> <span class="var">$next</span>(<span class="var">$request</span>);
+
+    <span class="cm">// Auth user but profile incomplete?</span>
+    <span class="kw">if</span> (!<span class="var">$user</span>->address || !<span class="var">$user</span>->phone) {
+        <span class="kw">return</span> <span class="fn">redirect</span>()-><span class="fn">route</span>(<span class="str">'profile.edit'</span>)
+            -><span class="fn">with</span>(<span class="str">'warning'</span>, <span class="str">'Please complete your profile to checkout.'</span>);
+    }
+
+    <span class="kw">return</span> <span class="var">$next</span>(<span class="var">$request</span>);
+}
+
+<span class="cm">// Then use it on checkout route:</span>
+<span class="cm">// Route::middleware(['auth', 'profile.complete'])->get('/checkout', ...);</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 12 — TESTING BOTH STATES -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step reveal" id="testing">
+          <div class="step__num">12</div>
+          <div class="step__content">
+            <h2 class="step__title">Testing Both Guest &amp; Auth States</h2>
+            <p class="step__desc">
+              Laravel's testing helpers make it easy to simulate both guest and authenticated
+              requests without a real browser.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">tests/Feature/AccessControlTest.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">use</span> <span class="cl">App\Models\User</span>;
+
+<span class="kw">class</span> <span class="cl">AccessControlTest</span> <span class="kw">extends</span> <span class="cl">TestCase</span>
+{
+    <span class="cm">/** @test */</span>
+    <span class="kw">public function</span> <span class="fn">guest_can_browse_products</span>()
+    {
+        <span class="var">$response</span> = <span class="var">$this</span>-><span class="fn">get</span>(<span class="str">'/products'</span>);
+        <span class="var">$response</span>-><span class="fn">assertStatus</span>(<span class="num">200</span>); <span class="cm">// ✓ accessible</span>
+    }
+
+    <span class="cm">/** @test */</span>
+    <span class="kw">public function</span> <span class="fn">guest_is_redirected_from_checkout</span>()
+    {
+        <span class="var">$response</span> = <span class="var">$this</span>-><span class="fn">get</span>(<span class="str">'/checkout'</span>);
+        <span class="var">$response</span>-><span class="fn">assertRedirect</span>(<span class="str">'/login'</span>); <span class="cm">// ✓ redirect to login</span>
+    }
+
+    <span class="cm">/** @test */</span>
+    <span class="kw">public function</span> <span class="fn">auth_user_can_access_checkout</span>()
+    {
+        <span class="var">$user</span> = <span class="cl">User</span>::<span class="fn">factory</span>()-><span class="fn">create</span>();
+
+        <span class="var">$response</span> = <span class="var">$this</span>-><span class="fn">actingAs</span>(<span class="var">$user</span>)-><span class="fn">get</span>(<span class="str">'/checkout'</span>);
+        <span class="var">$response</span>-><span class="fn">assertStatus</span>(<span class="num">200</span>); <span class="cm">// ✓ allowed</span>
+    }
+
+    <span class="cm">/** @test */</span>
+    <span class="kw">public function</span> <span class="fn">auth_user_cannot_view_others_orders</span>()
+    {
+        <span class="var">$userA</span> = <span class="cl">User</span>::<span class="fn">factory</span>()-><span class="fn">create</span>();
+        <span class="var">$userB</span> = <span class="cl">User</span>::<span class="fn">factory</span>()-><span class="fn">create</span>();
+        <span class="var">$order</span> = <span class="cl">Order</span>::<span class="fn">factory</span>()-><span class="fn">for</span>(<span class="var">$userA</span>)-><span class="fn">create</span>();
+
+        <span class="cm">// UserB tries to see UserA's order</span>
+        <span class="var">$response</span> = <span class="var">$this</span>-><span class="fn">actingAs</span>(<span class="var">$userB</span>)-><span class="fn">get</span>(<span class="str">"/orders/{$order->id}"</span>);
+        <span class="var">$response</span>-><span class="fn">assertStatus</span>(<span class="num">403</span>); <span class="cm">// ✓ forbidden</span>
+    }
+
+    <span class="cm">/** @test */</span>
+    <span class="kw">public function</span> <span class="fn">non_admin_cannot_access_admin_panel</span>()
+    {
+        <span class="var">$user</span> = <span class="cl">User</span>::<span class="fn">factory</span>()-><span class="fn">create</span>([<span class="str">'role'</span> => <span class="str">'user'</span>]);
+
+        <span class="var">$response</span> = <span class="var">$this</span>-><span class="fn">actingAs</span>(<span class="var">$user</span>)-><span class="fn">get</span>(<span class="str">'/admin/products'</span>);
+        <span class="var">$response</span>-><span class="fn">assertStatus</span>(<span class="num">403</span>); <span class="cm">// ✓ forbidden</span>
+    }
+}
+
+<span class="cm">// Run tests:</span>
+<span class="cm">// $ php artisan test</span>
+<span class="cm">// $ php artisan test --filter AccessControlTest</span></pre>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">✅</div>
+              <div class="info-box__text">
+                <strong>Quick debug tip:</strong> Not sure if a route is protected?
+                Open your terminal and run <code>php artisan route:list</code> — it shows
+                every route with its middleware column so you can see <code>auth</code>, <code>guest</code>,
+                or <code>admin</code> at a glance.
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — see all routes and their middleware</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> php artisan route:list
+
+<span class="cm">  GET|HEAD  /                     home           web</span>
+<span class="cm">  GET|HEAD  /products             products.index web</span>
+<span class="cm">  GET|HEAD  /login                login          web,guest</span>
+<span class="cm">  GET|HEAD  /checkout             checkout       web,auth</span>
+<span class="cm">  GET|HEAD  /dashboard            dashboard      web,auth</span>
+<span class="cm">  GET|HEAD  /admin/products       admin.products web,auth,admin</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHAPTER NAV -->
+        <div class="chapter-nav">
+          <a href="chapter3.html" class="chapter-nav__link">
+            <span class="chapter-nav__label">← Previous</span>
+            <span class="chapter-nav__title">Auth & Login System</span>
+          </a>
+          <a href="chapter4.html" class="chapter-nav__link chapter-nav__link--next">
+            <span class="chapter-nav__label">Next →</span>
+            <span class="chapter-nav__title">E-Commerce App</span>
+          </a>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/canvas.js"></script>
+  <script src="../js/scroll.js"></script>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

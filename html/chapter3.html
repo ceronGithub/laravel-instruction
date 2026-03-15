@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chapter 3 — Auth & Login | Laravel Mastery</title>
+
+<link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </a>
+    <div class="nav__links">
+      <a href="chapter1.html">Setup</a>
+      <a href="chapter-folders.html">Folders</a>
+      <a href="chapter2.html">Database</a>
+      <a href="chapter3.html" style="color:var(--accent-red)">Auth</a>
+      <a href="chapter-guest-auth.html">Guest/Auth</a>
+      <a href="chapter4.html">E-Com</a>
+      <a href="chapter5.html">Deploy</a>
+    </div>
+    <a href="../index.html" class="nav__badge" title="Back to Home — Auth"><span class="nav__badge-num">Ch.03</span> · Auth</a>
+  </nav>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="chapter-page">
+    <div class="chapter-hero">
+      <p class="chapter-hero__num">// CHAPTER 03</p>
+      <h1 class="chapter-hero__title">Auth & Login System</h1>
+      <p class="chapter-hero__desc">
+        Implement full authentication using Laravel Breeze. Build login, registration,
+        password reset, role-based middleware, and API token auth with Sanctum — 
+        all the security you need for the e-commerce project.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <span class="badge badge--purple" style="background:rgba(168,85,247,0.15);color:var(--accent-purple);">Breeze</span>
+        <span class="badge badge--blue">Sanctum</span>
+        <span class="badge badge--red">Middleware</span>
+        <span class="badge badge--green">Sessions</span>
+      </div>
+    </div>
+
+    <div class="chapter-layout">
+      <aside>
+        <div class="toc">
+          <p class="toc__title">// Contents</p>
+          <ul class="toc__list">
+            <li class="toc__item"><a href="#breeze">1. Install Breeze</a></li>
+            <li class="toc__item"><a href="#routes">2. Auth Routes</a></li>
+            <li class="toc__item"><a href="#login-ui">3. Login UI</a></li>
+            <li class="toc__item"><a href="#middleware">4. Middleware</a></li>
+            <li class="toc__item"><a href="#roles">5. Roles & Guards</a></li>
+            <li class="toc__item"><a href="#sanctum">6. Sanctum API Auth</a></li>
+            <li class="toc__item"><a href="#manual">7. Manual Auth Logic</a></li>
+          </ul>
+        </div>
+      </aside>
+
+      <main>
+
+        <!-- STEP 1 -->
+        <div class="step reveal" id="breeze">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <h2 class="step__title">Install Laravel Breeze</h2>
+            <p class="step__desc">
+              Laravel Breeze scaffolds all auth views and controllers with a single command.
+              It uses Blade and Tailwind CSS out of the box.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># 1. Require the package</span>
+<span class="t-prompt">$</span> composer require laravel/breeze --dev
+
+<span class="cm"># 2. Install Breeze scaffolding (Blade + Tailwind)</span>
+<span class="t-prompt">$</span> php artisan breeze:install blade
+
+<span class="cm"># 3. Install npm dependencies & compile assets</span>
+<span class="t-prompt">$</span> npm install
+<span class="t-prompt">$</span> npm run dev
+
+<span class="cm"># 4. Run auth migrations (creates users table)</span>
+<span class="t-prompt">$</span> php artisan migrate</pre>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">✅</div>
+              <div class="info-box__text">
+                After this, visit <code>/register</code> and <code>/login</code> — they just work!
+                Breeze creates controllers in <code>app/Http/Controllers/Auth/</code> and views in
+                <code>resources/views/auth/</code>.
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Generated file structure</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">app/Http/Controllers/Auth/</span>
+├── <span class="t-success">AuthenticatedSessionController.php</span>   ← Login/Logout
+├── <span class="t-success">RegisteredUserController.php</span>          ← Registration
+├── <span class="t-success">PasswordResetLinkController.php</span>       ← Forgot password
+└── <span class="t-success">NewPasswordController.php</span>             ← Reset password
+
+<span class="cm">resources/views/auth/</span>
+├── login.blade.php
+├── register.blade.php
+└── forgot-password.blade.php</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step reveal" id="routes">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <h2 class="step__title">Auth Routes</h2>
+            <p class="step__desc">
+              Breeze registers all auth routes automatically. Here's what gets added to <code>routes/web.php</code>
+              and how to protect your own routes:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">routes/web.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">use</span> <span class="cl">App\Http\Controllers\ProductController</span>;
+
+<span class="cm">// Public routes — anyone can view</span>
+Route::<span class="fn">get</span>(<span class="str">'/'</span>, [<span class="cl">ProductController</span>::<span class="kw">class</span>, <span class="str">'index'</span>])-><span class="fn">name</span>(<span class="str">'home'</span>);
+Route::<span class="fn">get</span>(<span class="str">'/products/{product}'</span>, [<span class="cl">ProductController</span>::<span class="kw">class</span>, <span class="str">'show'</span>]);
+
+<span class="cm">// Auth routes added by Breeze:</span>
+<span class="fn">require</span> __DIR__.<span class="str">'/auth.php'</span>;
+
+<span class="cm">// Protected routes — must be logged in</span>
+Route::<span class="fn">middleware</span>([<span class="str">'auth'</span>])-><span class="fn">group</span>(<span class="kw">function</span> () {
+    Route::<span class="fn">get</span>(<span class="str">'/dashboard'</span>, [<span class="cl">DashboardController</span>::<span class="kw">class</span>, <span class="str">'index'</span>]);
+    Route::<span class="fn">get</span>(<span class="str">'/cart'</span>,      [<span class="cl">CartController</span>::<span class="kw">class</span>, <span class="str">'index'</span>]);
+    Route::<span class="fn">post</span>(<span class="str">'/cart/add/{product}'</span>, [<span class="cl">CartController</span>::<span class="kw">class</span>, <span class="str">'add'</span>]);
+    Route::<span class="fn">post</span>(<span class="str">'/orders'</span>, [<span class="cl">OrderController</span>::<span class="kw">class</span>, <span class="str">'store'</span>]);
+});
+
+<span class="cm">// Admin-only routes</span>
+Route::<span class="fn">middleware</span>([<span class="str">'auth'</span>, <span class="str">'admin'</span>])-><span class="fn">prefix</span>(<span class="str">'admin'</span>)-><span class="fn">group</span>(<span class="kw">function</span> () {
+    Route::<span class="fn">resource</span>(<span class="str">'products'</span>, <span class="cl">ProductController</span>::<span class="kw">class</span>);
+    Route::<span class="fn">resource</span>(<span class="str">'orders'</span>,   <span class="cl">OrderController</span>::<span class="kw">class</span>);
+});</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 — LOGIN UI MOCKUP -->
+        <div class="step reveal" id="login-ui">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <h2 class="step__title">Login & Register UI</h2>
+            <p class="step__desc">
+              Breeze generates clean, responsive Blade views for login and registration.
+              Here's what the login page looks like (you can fully customize the Blade template):
+            </p>
+
+            <div class="ui-mockup">
+              <div class="ui-mockup__nav">
+                <span class="ui-mockup__nav-brand">🛒 LaravelShop</span>
+                <div class="ui-mockup__nav-links">
+                  <span>Products</span>
+                  <span>About</span>
+                  <span style="color:var(--accent-red)">Login</span>
+                </div>
+              </div>
+              <div class="ui-mockup__body">
+                <div style="max-width:360px;margin:0 auto;padding:20px;">
+                  <div style="text-align:center;margin-bottom:24px;">
+                    <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;margin-bottom:4px;">Welcome Back</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">Sign in to your account</div>
+                  </div>
+                  <div style="margin-bottom:14px;">
+                    <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-secondary);margin-bottom:6px;">Email</div>
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--text-muted);"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="543530393d3a14273c3b247a373b39">[email&#160;protected]</a></div>
+                  </div>
+                  <div style="margin-bottom:20px;">
+                    <div style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-secondary);margin-bottom:6px;">Password</div>
+                    <div style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:0.85rem;color:var(--text-muted);">••••••••</div>
+                  </div>
+                  <div style="padding:11px;background:linear-gradient(135deg,var(--accent-red),var(--accent-orange));border-radius:8px;text-align:center;font-family:var(--font-display);font-size:0.9rem;font-weight:700;color:white;cursor:pointer;">Log In</div>
+                  <div style="text-align:center;margin-top:14px;font-size:0.78rem;color:var(--text-muted);">Don't have an account? <span style="color:var(--accent-red);">Register →</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/views/auth/login.blade.php (simplified)</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="tag-hl">&lt;form</span> <span class="attr-hl">method</span>=<span class="str">"POST"</span> <span class="attr-hl">action</span>=<span class="str">"{{ route('login') }}"</span><span class="tag-hl">&gt;</span>
+    <span class="tag-hl">@csrf</span>
+
+    <span class="tag-hl">&lt;input</span> <span class="attr-hl">type</span>=<span class="str">"email"</span> <span class="attr-hl">name</span>=<span class="str">"email"</span>
+           <span class="attr-hl">value</span>=<span class="str">"{{ old('email') }}"</span> <span class="attr-hl">required</span> <span class="attr-hl">autofocus</span><span class="tag-hl">&gt;</span>
+
+    <span class="tag-hl">@error</span>(<span class="str">'email'</span>)
+        <span class="tag-hl">&lt;p</span> <span class="attr-hl">class</span>=<span class="str">"error"</span><span class="tag-hl">&gt;</span>{{ $message }}<span class="tag-hl">&lt;/p&gt;</span>
+    <span class="tag-hl">@enderror</span>
+
+    <span class="tag-hl">&lt;input</span> <span class="attr-hl">type</span>=<span class="str">"password"</span> <span class="attr-hl">name</span>=<span class="str">"password"</span> <span class="attr-hl">required</span><span class="tag-hl">&gt;</span>
+
+    <span class="tag-hl">&lt;button</span> <span class="attr-hl">type</span>=<span class="str">"submit"</span><span class="tag-hl">&gt;</span>Log in<span class="tag-hl">&lt;/button&gt;</span>
+<span class="tag-hl">&lt;/form&gt;</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step reveal" id="middleware">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <h2 class="step__title">Protecting Routes with Middleware</h2>
+            <p class="step__desc">
+              Middleware runs before your controller handles the request.
+              The built-in <code>auth</code> middleware redirects unauthenticated users to <code>/login</code>.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">In Controller constructor</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">class</span> <span class="cl">CartController</span> <span class="kw">extends</span> <span class="cl">Controller</span>
+{
+    <span class="kw">public function</span> <span class="fn">__construct</span>()
+    {
+        <span class="cm">// Require auth for ALL methods in this controller</span>
+        <span class="var">$this</span>-><span class="fn">middleware</span>(<span class="str">'auth'</span>);
+    }
+
+    <span class="kw">public function</span> <span class="fn">index</span>()
+    {
+        <span class="cm">// Auth::user() is now always available</span>
+        <span class="var">$cart</span> = <span class="fn">session</span>(<span class="str">'cart'</span>, []);
+        <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'cart.index'</span>, <span class="fn">compact</span>(<span class="str">'cart'</span>));
+    }
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">In Blade templates</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">{{-- Show different UI based on auth state --}}</span>
+<span class="tag-hl">@auth</span>
+    <span class="tag-hl">&lt;span&gt;</span>Hello, {{ Auth::user()->name }}!<span class="tag-hl">&lt;/span&gt;</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"{{ route('logout') }}"</span><span class="tag-hl">&gt;</span>Logout<span class="tag-hl">&lt;/a&gt;</span>
+<span class="tag-hl">@endauth</span>
+
+<span class="tag-hl">@guest</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"{{ route('login') }}"</span><span class="tag-hl">&gt;</span>Login<span class="tag-hl">&lt;/a&gt;</span>
+    <span class="tag-hl">&lt;a</span> <span class="attr-hl">href</span>=<span class="str">"{{ route('register') }}"</span><span class="tag-hl">&gt;</span>Register<span class="tag-hl">&lt;/a&gt;</span>
+<span class="tag-hl">@endguest</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step reveal" id="roles">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <h2 class="step__title">Role-Based Access (Admin vs User)</h2>
+            <p class="step__desc">
+              Add a <code>role</code> column to users, then create a custom middleware to restrict admin pages.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash + migration</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> php artisan make:migration add_role_to_users_table
+<span class="t-prompt">$</span> php artisan make:middleware AdminMiddleware</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Middleware/AdminMiddleware.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">handle</span>(<span class="cl">Request</span> <span class="var">$request</span>, <span class="cl">Closure</span> <span class="var">$next</span>): <span class="cl">Response</span>
+{
+    <span class="kw">if</span> (!<span class="fn">auth</span>()-><span class="fn">check</span>() || <span class="fn">auth</span>()-><span class="fn">user</span>()-><span class="fn">role</span> !== <span class="str">'admin'</span>) {
+        <span class="kw">abort</span>(<span class="num">403</span>, <span class="str">'Unauthorized — Admin only.'</span>);
+    }
+
+    <span class="kw">return</span> <span class="var">$next</span>(<span class="var">$request</span>);
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bootstrap/app.php — register middleware alias (Laravel 11+/12)</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre"><span class="kw">return</span> <span class="cl">Application</span>::<span class="fn">configure</span>(basePath: dirname(__DIR__))
+    -><span class="fn">withMiddleware</span>(<span class="kw">function</span> (<span class="cl">Middleware</span> <span class="var">$middleware</span>) {
+        <span class="var">$middleware</span>-><span class="fn">alias</span>([
+            <span class="str">'admin'</span> => <span class="cl">\App\Http\Middleware\AdminMiddleware</span>::<span class="kw">class</span>,
+        ]);
+    })-><span class="fn">create</span>();</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step reveal" id="sanctum">
+          <div class="step__num">6</div>
+          <div class="step__content">
+            <h2 class="step__title">API Auth with Sanctum</h2>
+            <p class="step__desc">
+              For AJAX requests (like our add-to-cart), we use Sanctum for cookie-based session
+              auth, meaning your existing login session works with fetch/AJAX automatically.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre"><span class="t-prompt">$</span> composer require laravel/sanctum
+<span class="t-prompt">$</span> php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+<span class="t-prompt">$</span> php artisan migrate</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">routes/api.php — protect API endpoints</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Sanctum-protected API routes</span>
+Route::<span class="fn">middleware</span>(<span class="str">'auth:sanctum'</span>)-><span class="fn">group</span>(<span class="kw">function</span> () {
+    Route::<span class="fn">get</span>(<span class="str">'/user'</span>, <span class="kw">function</span> (<span class="cl">Request</span> <span class="var">$r</span>) {
+        <span class="kw">return</span> <span class="var">$r</span>-><span class="fn">user</span>();
+    });
+    Route::<span class="fn">get</span>(<span class="str">'/cart'</span>, [<span class="cl">CartController</span>::<span class="kw">class</span>, <span class="str">'getCart'</span>]);
+    Route::<span class="fn">post</span>(<span class="str">'/cart/add'</span>, [<span class="cl">CartController</span>::<span class="kw">class</span>, <span class="str">'add'</span>]);
+});</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 7 -->
+        <div class="step reveal" id="manual">
+          <div class="step__num">7</div>
+          <div class="step__content">
+            <h2 class="step__title">Manual Auth (Without Breeze)</h2>
+            <p class="step__desc">
+              Sometimes you want full control. Here's how to manually handle login/logout:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/Auth/LoginController.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">use</span> <span class="cl">Illuminate\Support\Facades\Auth</span>;
+
+<span class="kw">public function</span> <span class="fn">login</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="var">$credentials</span> = <span class="var">$request</span>-><span class="fn">validate</span>([
+        <span class="str">'email'</span>    => <span class="str">'required|email'</span>,
+        <span class="str">'password'</span> => <span class="str">'required'</span>,
+    ]);
+
+    <span class="kw">if</span> (<span class="cl">Auth</span>::<span class="fn">attempt</span>(<span class="var">$credentials</span>, <span class="var">$request</span>-><span class="fn">remember</span>())) {
+        <span class="var">$request</span>-><span class="fn">session</span>()-><span class="fn">regenerate</span>(); <span class="cm">// Prevent session fixation</span>
+        <span class="kw">return</span> <span class="fn">redirect</span>()-><span class="fn">intended</span>(<span class="str">'dashboard'</span>);
+    }
+
+    <span class="kw">return</span> <span class="fn">back</span>()-><span class="fn">withErrors</span>([
+        <span class="str">'email'</span> => <span class="str">'These credentials do not match.'</span>,
+    ]);
+}
+
+<span class="kw">public function</span> <span class="fn">logout</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="cl">Auth</span>::<span class="fn">logout</span>();
+    <span class="var">$request</span>-><span class="fn">session</span>()-><span class="fn">invalidate</span>();
+    <span class="var">$request</span>-><span class="fn">session</span>()-><span class="fn">regenerateToken</span>();
+    <span class="kw">return</span> <span class="fn">redirect</span>(<span class="str">'/'</span>);
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="chapter-nav">
+          <a href="chapter2.html" class="chapter-nav__link">
+            <span class="chapter-nav__label">← Previous</span>
+            <span class="chapter-nav__title">Database & Models</span>
+          </a>
+          <a href="chapter4.html" class="chapter-nav__link chapter-nav__link--next">
+            <span class="chapter-nav__label">Next →</span>
+            <span class="chapter-nav__title">E-Commerce App</span>
+          </a>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/canvas.js"></script>
+  <script src="../js/scroll.js"></script>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

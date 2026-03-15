@@ -1,0 +1,216 @@
+/* ===================================================
+   ANIMATIONS.CSS
+   =================================================== */
+
+@keyframes glowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50%       { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--accent-green); }
+  50%       { opacity: 0.4; box-shadow: 0 0 4px var(--accent-green); }
+}
+
+@keyframes scrollBounce {
+  0%, 100% { transform: rotate(45deg) translateY(0); opacity: 1; }
+  50%       { transform: rotate(45deg) translateY(6px); opacity: 0.5; }
+}
+
+@keyframes stripScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes typingBlink {
+  0%, 100% { border-color: var(--accent-green); }
+  50%       { border-color: transparent; }
+}
+
+/* Reveal on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1),
+              transform 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-section {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger children */
+.chapter-card:nth-child(1) { transition-delay: 0.0s; }
+.chapter-card:nth-child(2) { transition-delay: 0.08s; }
+.chapter-card:nth-child(3) { transition-delay: 0.16s; }
+.chapter-card:nth-child(4) { transition-delay: 0.24s; }
+.chapter-card:nth-child(5) { transition-delay: 0.32s; }
+.chapter-card:nth-child(6) { transition-delay: 0.40s; }
+
+.tech-item:nth-child(1)  { transition-delay: 0.00s; }
+.tech-item:nth-child(2)  { transition-delay: 0.05s; }
+.tech-item:nth-child(3)  { transition-delay: 0.10s; }
+.tech-item:nth-child(4)  { transition-delay: 0.15s; }
+.tech-item:nth-child(5)  { transition-delay: 0.20s; }
+.tech-item:nth-child(6)  { transition-delay: 0.25s; }
+.tech-item:nth-child(7)  { transition-delay: 0.30s; }
+.tech-item:nth-child(8)  { transition-delay: 0.35s; }
+.tech-item:nth-child(9)  { transition-delay: 0.40s; }
+.tech-item:nth-child(10) { transition-delay: 0.45s; }
+.tech-item:nth-child(11) { transition-delay: 0.50s; }
+.tech-item:nth-child(12) { transition-delay: 0.55s; }
+
+/* Step reveal */
+.step {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.step.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Particle float */
+@keyframes particleFloat {
+  0%   { transform: translateY(0px) rotate(0deg);   opacity: 0.6; }
+  50%  { transform: translateY(-30px) rotate(180deg); opacity: 0.9; }
+  100% { transform: translateY(0px) rotate(360deg); opacity: 0.6; }
+}
+
+/* Gradient shift */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Hero title entrance */
+.hero__content {
+  animation: fadeInLeft 0.9s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+
+.hero__code-window {
+  animation: fadeInRight 0.9s cubic-bezier(0.4,0,0.2,1) 0.2s forwards;
+}
+
+.hero__label {
+  animation: fadeInUp 0.6s ease 0.1s forwards;
+}
+
+.hero__title {
+  animation: fadeInUp 0.6s ease 0.2s forwards;
+}
+
+.hero__subtitle {
+  animation: fadeInUp 0.6s ease 0.3s forwards;
+}
+
+.hero__tags {
+  animation: fadeInUp 0.6s ease 0.4s forwards;
+}
+
+.hero__cta {
+  animation: fadeInUp 0.6s ease 0.5s forwards;
+}
+
+/* Cursor blink for typing */
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--accent-green);
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: typingBlink 0.8s ease-in-out infinite;
+}
+
+/* Code highlight fade-in */
+.code-tab-enter {
+  animation: scaleIn 0.3s ease forwards;
+}
+
+/* Shimmer loading */
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.03) 25%,
+    rgba(255,255,255,0.07) 50%,
+    rgba(255,255,255,0.03) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Neon pulse on hover for accent elements */
+.neon-pulse:hover {
+  animation: neonPulse 1s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+  0%, 100% { text-shadow: 0 0 8px var(--accent-red), 0 0 20px var(--accent-red); }
+  50%       { text-shadow: 0 0 4px var(--accent-red); }
+}
+
+
+/* ── Safety: ensure hero elements are always visible even if animation fails ── */
+.hero__content,
+.hero__code-window,
+.hero__label,
+.hero__title,
+.hero__subtitle,
+.hero__tags,
+.hero__cta {
+  opacity: 1;
+}
+
+/* ── Chapter hero is always above the fold — never hide it ── */
+.chapter-hero {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ── Ensure .reveal.visible always shows regardless of animation state ── */
+.reveal.visible,
+.reveal-section.visible,
+.step.visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chapter 2 — Database & Models | Laravel Mastery</title>
+
+<link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </a>
+    <div class="nav__links">
+      <a href="chapter1.html">Setup</a>
+      <a href="chapter-folders.html">Folders</a>
+      <a href="chapter2.html" style="color:var(--accent-red)">Database</a>
+      <a href="chapter3.html">Auth</a>
+      <a href="chapter-guest-auth.html">Guest/Auth</a>
+      <a href="chapter4.html">E-Com</a>
+      <a href="chapter5.html">Deploy</a>
+    </div>
+    <a href="../index.html" class="nav__badge" title="Back to Home — Database"><span class="nav__badge-num">Ch.02</span> · Database</a>
+  </nav>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="chapter-page">
+    <div class="chapter-hero">
+      <p class="chapter-hero__num">// CHAPTER 02</p>
+      <h1 class="chapter-hero__title">Database & Models</h1>
+      <p class="chapter-hero__desc">
+        Configure MySQL and MariaDB in Laragon, create migrations and models,
+        work with Eloquent ORM, define relationships, and seed your database
+        with realistic test data for the e-commerce project.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <span class="badge badge--blue">MySQL</span>
+        <span class="badge badge--green">MariaDB</span>
+        <span class="badge badge--red">Eloquent</span>
+        <span class="badge badge--yellow">Migrations</span>
+      </div>
+    </div>
+
+    <div class="chapter-layout">
+      <aside>
+        <div class="toc">
+          <p class="toc__title">// Contents</p>
+          <ul class="toc__list">
+            <li class="toc__item"><a href="#dbconfig">1. .env Database Config</a></li>
+            <li class="toc__item"><a href="#mysqlvsmaria">2. MySQL vs MariaDB</a></li>
+            <li class="toc__item"><a href="#migrations">3. Migrations</a></li>
+            <li class="toc__item"><a href="#models">4. Models & Fillable</a></li>
+            <li class="toc__item"><a href="#relationships">5. Relationships</a></li>
+            <li class="toc__item"><a href="#seeding">6. Seeding</a></li>
+            <li class="toc__item"><a href="#queries">7. Eloquent Queries</a></li>
+          </ul>
+        </div>
+      </aside>
+
+      <main>
+
+        <!-- STEP 1 -->
+        <div class="step reveal" id="dbconfig">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <h2 class="step__title">Configure .env for Database</h2>
+            <p class="step__desc">
+              Every Laravel project has a <code style="background:rgba(255,255,255,0.06);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem;">.env</code> file at the root.
+              This is where you put your database credentials. Open it and update the <code>DB_*</code> variables:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">.env</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Application settings</span>
+<span class="var">APP_NAME</span>=<span class="str">LaravelShop</span>
+<span class="var">APP_ENV</span>=<span class="str">local</span>
+<span class="var">APP_KEY</span>=<span class="str">base64:xxxx...</span>  <span class="cm"># auto-set by key:generate</span>
+<span class="var">APP_DEBUG</span>=<span class="str">true</span>
+<span class="var">APP_URL</span>=<span class="str">http://localhost</span>
+
+<span class="cm"># Database — Laragon defaults:</span>
+<span class="var">DB_CONNECTION</span>=<span class="str">mysql</span>
+<span class="var">DB_HOST</span>=<span class="str">127.0.0.1</span>
+<span class="var">DB_PORT</span>=<span class="str">3306</span>
+<span class="var">DB_DATABASE</span>=<span class="str">laravel_shop</span>
+<span class="var">DB_USERNAME</span>=<span class="str">root</span>
+<span class="var">DB_PASSWORD</span>=          <span class="cm"># Laragon default is empty</span></pre>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">💡</div>
+              <div class="info-box__text">
+                <strong>Create the database first!</strong> Open phpMyAdmin at <code>http://localhost/phpmyadmin</code>
+                (Laragon provides this), create a new database called <code>laravel_shop</code>, then run migrations.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step reveal" id="mysqlvsmaria">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <h2 class="step__title">MySQL vs MariaDB in Laragon</h2>
+            <p class="step__desc">
+              Laragon ships with both MySQL and MariaDB. You can switch between them.
+              For Laravel development they're interchangeable — same SQL syntax, same Eloquent code.
+            </p>
+
+            <table class="compare-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>MySQL 8.x</th>
+                  <th>MariaDB 10.x</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Default Port</td>
+                  <td>3306</td>
+                  <td>3306</td>
+                </tr>
+                <tr>
+                  <td>Laravel .env</td>
+                  <td><code>DB_CONNECTION=mysql</code></td>
+                  <td><code>DB_CONNECTION=mysql</code></td>
+                </tr>
+                <tr>
+                  <td>Performance</td>
+                  <td>Great for large datasets</td>
+                  <td>Slightly faster for reads</td>
+                </tr>
+                <tr>
+                  <td>JSON support</td>
+                  <td>Full JSON columns</td>
+                  <td>Full JSON columns</td>
+                </tr>
+                <tr>
+                  <td>Open source</td>
+                  <td>Oracle-owned</td>
+                  <td>Community fork (100% free)</td>
+                </tr>
+                <tr>
+                  <td>Laragon switch</td>
+                  <td colspan="2" style="color:var(--accent-green);">Menu → MySQL → Switch to MariaDB</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step reveal" id="migrations">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <h2 class="step__title">Migrations — Create Database Tables</h2>
+            <p class="step__desc">
+              Migrations are version-controlled schema files. You define your table structure in PHP,
+              and Laravel creates the SQL for you.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — generate migrations</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Create model + migration + controller all at once:</span>
+<span class="t-prompt">$</span> php artisan make:model Product -mcr
+<span class="t-prompt">$</span> php artisan make:model Category -mcr
+<span class="t-prompt">$</span> php artisan make:model Order -mcr
+<span class="t-prompt">$</span> php artisan make:model OrderItem -mcr</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">database/migrations/create_products_table.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">up</span>(): <span class="cl">void</span>
+{
+    Schema::<span class="fn">create</span>(<span class="str">'products'</span>, <span class="kw">function</span> (Blueprint <span class="var">$table</span>) {
+        <span class="var">$table</span>-><span class="fn">id</span>();
+        <span class="var">$table</span>-><span class="fn">string</span>(<span class="str">'name'</span>);
+        <span class="var">$table</span>-><span class="fn">text</span>(<span class="str">'description'</span>)-><span class="fn">nullable</span>();
+        <span class="var">$table</span>-><span class="fn">decimal</span>(<span class="str">'price'</span>, <span class="num">10</span>, <span class="num">2</span>);
+        <span class="var">$table</span>-><span class="fn">unsignedInteger</span>(<span class="str">'stock'</span>)-><span class="fn">default</span>(<span class="num">0</span>);
+        <span class="var">$table</span>-><span class="fn">string</span>(<span class="str">'image'</span>)-><span class="fn">nullable</span>();
+        <span class="var">$table</span>-><span class="fn">boolean</span>(<span class="str">'is_featured'</span>)-><span class="fn">default</span>(<span class="kw">false</span>);
+        <span class="var">$table</span>-><span class="fn">foreignId</span>(<span class="str">'category_id'</span>)-><span class="fn">constrained</span>()-><span class="fn">cascadeOnDelete</span>();
+        <span class="var">$table</span>-><span class="fn">timestamps</span>();
+    });
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — run migrations</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> php artisan migrate
+
+<span class="t-success">INFO  Running migrations.</span>
+<span class="t-success">✓  2024_01_01_000000_create_users_table ............... 42ms DONE</span>
+<span class="t-success">✓  2024_01_01_000001_create_categories_table ......... 38ms DONE</span>
+<span class="t-success">✓  2024_01_01_000002_create_products_table ........... 41ms DONE</span>
+
+<span class="cm"># Reset and re-run all migrations:</span>
+<span class="t-prompt">$</span> php artisan migrate:fresh
+
+<span class="cm"># Reset + seed:</span>
+<span class="t-prompt">$</span> php artisan migrate:fresh --seed</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step reveal" id="models">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <h2 class="step__title">Models & $fillable</h2>
+            <p class="step__desc">
+              Eloquent models represent database tables. The <code>$fillable</code> array defines
+              which columns can be mass-assigned (i.e., via <code>Product::create([...])</code>).
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Models/Product.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">namespace</span> <span class="cl">App\Models</span>;
+
+<span class="kw">use</span> <span class="cl">Illuminate\Database\Eloquent\Model</span>;
+<span class="kw">use</span> <span class="cl">Illuminate\Database\Eloquent\Factories\HasFactory</span>;
+
+<span class="kw">class</span> <span class="cl">Product</span> <span class="kw">extends</span> <span class="cl">Model</span>
+{
+    <span class="kw">use</span> <span class="cl">HasFactory</span>;
+
+    <span class="cm">// Columns that can be mass-assigned</span>
+    <span class="kw">protected</span> <span class="var">$fillable</span> = [
+        <span class="str">'name'</span>, <span class="str">'description'</span>, <span class="str">'price'</span>,
+        <span class="str">'stock'</span>, <span class="str">'image'</span>, <span class="str">'is_featured'</span>,
+        <span class="str">'category_id'</span>,
+    ];
+
+    <span class="cm">// Cast price to float automatically</span>
+    <span class="kw">protected</span> <span class="var">$casts</span> = [
+        <span class="str">'price'</span>       => <span class="str">'float'</span>,
+        <span class="str">'is_featured'</span> => <span class="str">'boolean'</span>,
+    ];
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step reveal" id="relationships">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <h2 class="step__title">Eloquent Relationships</h2>
+            <p class="step__desc">
+              Eloquent makes table relationships simple. Here's how our e-commerce models relate:
+            </p>
+
+            <div class="flow">
+              <div class="flow__node">User</div>
+              <div class="flow__arrow"></div>
+              <div class="flow__node flow__node--active">hasMany Orders</div>
+              <div class="flow__arrow"></div>
+              <div class="flow__node">Order</div>
+              <div class="flow__arrow"></div>
+              <div class="flow__node">hasMany OrderItems</div>
+              <div class="flow__arrow"></div>
+              <div class="flow__node">Product</div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Models/Product.php — with relationships</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Product belongs to a Category</span>
+<span class="kw">public function</span> <span class="fn">category</span>()
+{
+    <span class="kw">return</span> <span class="var">$this</span>-><span class="fn">belongsTo</span>(<span class="cl">Category</span>::<span class="kw">class</span>);
+}
+
+<span class="cm">// Product can be in many OrderItems</span>
+<span class="kw">public function</span> <span class="fn">orderItems</span>()
+{
+    <span class="kw">return</span> <span class="var">$this</span>-><span class="fn">hasMany</span>(<span class="cl">OrderItem</span>::<span class="kw">class</span>);
+}
+
+<span class="cm">// ────────────────────────────────────────────</span>
+<span class="cm">// app/Models/Order.php</span>
+<span class="kw">public function</span> <span class="fn">user</span>()
+{
+    <span class="kw">return</span> <span class="var">$this</span>-><span class="fn">belongsTo</span>(<span class="cl">User</span>::<span class="kw">class</span>);
+}
+
+<span class="kw">public function</span> <span class="fn">items</span>()
+{
+    <span class="kw">return</span> <span class="var">$this</span>-><span class="fn">hasMany</span>(<span class="cl">OrderItem</span>::<span class="kw">class</span>);
+}
+
+<span class="cm">// ────────────────────────────────────────────</span>
+<span class="cm">// app/Models/User.php</span>
+<span class="kw">public function</span> <span class="fn">orders</span>()
+{
+    <span class="kw">return</span> <span class="var">$this</span>-><span class="fn">hasMany</span>(<span class="cl">Order</span>::<span class="kw">class</span>);
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step reveal" id="seeding">
+          <div class="step__num">6</div>
+          <div class="step__content">
+            <h2 class="step__title">Seed the Database</h2>
+            <p class="step__desc">
+              Use Factories and Seeders to fill your database with realistic fake data for development.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">database/seeders/DatabaseSeeder.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">run</span>(): <span class="cl">void</span>
+{
+    <span class="cm">// Create admin user</span>
+    <span class="cl">User</span>::<span class="fn">factory</span>()-><span class="fn">create</span>([
+        <span class="str">'name'</span>     => <span class="str">'Admin'</span>,
+        <span class="str">'email'</span>    => <span class="str">'<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ccada8a1a5a28cbfa4a3bce2afa3a1">[email&#160;protected]</a>'</span>,
+        <span class="str">'password'</span> => <span class="fn">bcrypt</span>(<span class="str">'password'</span>),
+    ]);
+
+    <span class="cm">// Create 5 categories</span>
+    <span class="cl">Category</span>::<span class="fn">factory</span>(<span class="num">5</span>)-><span class="fn">create</span>();
+
+    <span class="cm">// Create 50 products tied to categories</span>
+    <span class="cl">Product</span>::<span class="fn">factory</span>(<span class="num">50</span>)-><span class="fn">create</span>();
+
+    <span class="cm">// Create 20 test customers</span>
+    <span class="cl">User</span>::<span class="fn">factory</span>(<span class="num">20</span>)-><span class="fn">create</span>();
+}
+
+<span class="cm">// Run it:</span>
+<span class="cm">// $ php artisan db:seed</span>
+<span class="cm">// $ php artisan migrate:fresh --seed</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 7 -->
+        <div class="step reveal" id="queries">
+          <div class="step__num">7</div>
+          <div class="step__content">
+            <h2 class="step__title">Eloquent Queries Cheat Sheet</h2>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Eloquent ORM — common queries</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Get all products</span>
+<span class="var">$products</span> = <span class="cl">Product</span>::<span class="fn">all</span>();
+
+<span class="cm">// Find by ID</span>
+<span class="var">$product</span> = <span class="cl">Product</span>::<span class="fn">find</span>(<span class="num">1</span>);
+<span class="var">$product</span> = <span class="cl">Product</span>::<span class="fn">findOrFail</span>(<span class="num">1</span>); <span class="cm">// throws 404 if not found</span>
+
+<span class="cm">// Filter & sort</span>
+<span class="var">$featured</span> = <span class="cl">Product</span>::<span class="fn">where</span>(<span class="str">'is_featured'</span>, <span class="kw">true</span>)
+    -><span class="fn">where</span>(<span class="str">'stock'</span>, <span class="str">'>'</span>, <span class="num">0</span>)
+    -><span class="fn">orderBy</span>(<span class="str">'price'</span>)
+    -><span class="fn">get</span>();
+
+<span class="cm">// Eager load relationships (avoids N+1 query problem)</span>
+<span class="var">$products</span> = <span class="cl">Product</span>::<span class="fn">with</span>([<span class="str">'category'</span>])-><span class="fn">paginate</span>(<span class="num">12</span>);
+
+<span class="cm">// Create</span>
+<span class="var">$product</span> = <span class="cl">Product</span>::<span class="fn">create</span>([<span class="str">'name'</span> => <span class="str">'Laptop'</span>, <span class="str">'price'</span> => <span class="num">999.99</span>]);
+
+<span class="cm">// Update</span>
+<span class="var">$product</span>-><span class="fn">update</span>([<span class="str">'stock'</span> => <span class="num">50</span>]);
+
+<span class="cm">// Delete</span>
+<span class="var">$product</span>-><span class="fn">delete</span>();
+
+<span class="cm">// Aggregates</span>
+<span class="var">$total</span> = <span class="cl">Product</span>::<span class="fn">sum</span>(<span class="str">'price'</span>);
+<span class="var">$count</span> = <span class="cl">Product</span>::<span class="fn">where</span>(<span class="str">'stock'</span>, <span class="str">'>'</span>, <span class="num">0</span>)-><span class="fn">count</span>();</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="chapter-nav">
+          <a href="chapter1.html" class="chapter-nav__link">
+            <span class="chapter-nav__label">← Previous</span>
+            <span class="chapter-nav__title">Setup & Installation</span>
+          </a>
+          <a href="chapter3.html" class="chapter-nav__link chapter-nav__link--next">
+            <span class="chapter-nav__label">Next →</span>
+            <span class="chapter-nav__title">Auth & Login System</span>
+          </a>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="../js/canvas.js"></script>
+  <script src="../js/scroll.js"></script>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

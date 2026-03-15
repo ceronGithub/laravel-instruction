@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Laravel Mastery — From Zero to Live</title>
+  <!-- Fonts loaded via CSS @import for file:// compatibility -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <div class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </div>
+    <div class="nav__links">
+      <a href="html/chapter1.html">Setup</a>
+      <a href="html/chapter-folders.html">Folders</a>
+      <a href="html/chapter2.html">Database</a>
+      <a href="html/chapter3.html">Auth</a>
+      <a href="html/chapter-guest-auth.html">Guest/Auth</a>
+      <a href="html/chapter4.html">E-Com</a>
+      <a href="html/chapter5.html">Deploy</a>
+    </div>
+    <span class="nav__badge"><span class="nav__badge-num">Laravel</span> · 8 &amp; 12</span>
+  </nav>
+
+  <!-- CANVAS BACKGROUND -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="hero">
+    <div class="hero__glow hero__glow--1"></div>
+    <div class="hero__glow hero__glow--2"></div>
+
+    <div class="hero__content">
+      <div class="hero__label">
+        <span class="dot dot--green"></span>
+        Full Stack Tutorial Series
+      </div>
+
+      <h1 class="hero__title">
+        <span class="hero__title-line">How to Build</span>
+        <span class="hero__title-line hero__title-line--accent">Laravel Projects</span>
+        <span class="hero__title-line">with Laragon</span>
+      </h1>
+
+      <p class="hero__subtitle">
+        From local setup to live deployment — master Laravel 8 & 12, MySQL, MariaDB,
+        authentication, AJAX data flow, and a complete e-commerce app. Step by step.
+      </p>
+
+      <div class="hero__tags">
+        <span class="tag">Laravel 8</span>
+        <span class="tag">Laravel 12</span>
+        <span class="tag">Laragon</span>
+        <span class="tag">MySQL</span>
+        <span class="tag">MariaDB</span>
+        <span class="tag">AJAX</span>
+        <span class="tag">Auth</span>
+        <span class="tag">E-Commerce</span>
+      </div>
+
+      <div class="hero__cta">
+        <a href="html/chapter1.html" class="btn btn--primary">
+          <span>Start Tutorial</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#overview" class="btn btn--ghost">View Chapters</a>
+      </div>
+    </div>
+
+    <div class="hero__code-window">
+      <div class="code-window">
+        <div class="code-window__bar">
+          <span class="code-window__dot code-window__dot--red"></span>
+          <span class="code-window__dot code-window__dot--yellow"></span>
+          <span class="code-window__dot code-window__dot--green"></span>
+          <span class="code-window__title">terminal</span>
+        </div>
+        <div class="code-window__body" id="terminalBody">
+          <div class="terminal-line"><span class="t-prompt">$</span> <span class="t-cmd typing-text" id="typingCmd"></span></div>
+          <div class="terminal-output" id="terminalOutput"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero__scroll-hint">
+      <span>Scroll to explore</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- ===== OVERVIEW STRIP ===== -->
+  <section class="strip" id="overview">
+    <div class="strip__inner" id="stripInner">
+      <span>Laravel 8 &amp; 12</span><span class="strip__sep">✦</span><span>Laragon Local Dev</span><span class="strip__sep">✦</span><span>MySQL + MariaDB</span><span class="strip__sep">✦</span><span>Eloquent ORM</span><span class="strip__sep">✦</span><span>Blade Templates</span><span class="strip__sep">✦</span><span>Auth Scaffolding</span><span class="strip__sep">✦</span><span>AJAX &amp; Fetch API</span><span class="strip__sep">✦</span><span>REST APIs</span><span class="strip__sep">✦</span><span>Deploy to Live</span><span class="strip__sep">✦</span>
+      <span>Laravel 8 &amp; 12</span><span class="strip__sep">✦</span><span>Laragon Local Dev</span><span class="strip__sep">✦</span><span>MySQL + MariaDB</span><span class="strip__sep">✦</span><span>Eloquent ORM</span><span class="strip__sep">✦</span><span>Blade Templates</span><span class="strip__sep">✦</span><span>Auth Scaffolding</span><span class="strip__sep">✦</span><span>AJAX &amp; Fetch API</span><span class="strip__sep">✦</span><span>REST APIs</span><span class="strip__sep">✦</span><span>Deploy to Live</span><span class="strip__sep">✦</span>
+    </div>
+  </section>
+
+  <!-- ===== CHAPTERS ===== -->
+  <section class="chapters" id="chapters">
+    <div class="section-header">
+      <p class="section-header__label">// curriculum</p>
+      <h2 class="section-header__title">Your Learning Path</h2>
+      <p class="section-header__sub">Five comprehensive chapters. One complete e-commerce project.</p>
+    </div>
+
+    <div class="chapters__grid">
+
+      <a href="html/chapter1.html" class="chapter-card chapter-card--1 reveal">
+        <div class="chapter-card__num">01</div>
+        <div class="chapter-card__icon">⚙️</div>
+        <h3 class="chapter-card__title">Setup & Installation</h3>
+        <p class="chapter-card__desc">Install Laragon, PHP, Composer. Create your first Laravel 8 and Laravel 12 project. Understand project structure.</p>
+        <ul class="chapter-card__topics">
+          <li>Install Laragon</li>
+          <li>Composer & PHP config</li>
+          <li>laravel new project</li>
+          <li>Artisan commands</li>
+          <li>Fix common errors</li>
+        </ul>
+        <span class="chapter-card__cta">Begin Chapter →</span>
+      </a>
+
+      <a href="html/chapter-folders.html" class="chapter-card reveal" style="border-color:rgba(14,165,233,0.2);background:rgba(14,165,233,0.03);">
+        <div class="chapter-card__num" style="background:linear-gradient(135deg,#0ea5e9,#6d28d9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">1.5</div>
+        <div class="chapter-card__icon">📂</div>
+        <h3 class="chapter-card__title">Laravel Folder Guide</h3>
+        <p class="chapter-card__desc">Deep dive into <strong>resources/</strong>, <strong>public/</strong>, <strong>database/</strong>, <strong>config/</strong>, and <strong>app/</strong> — what goes where and why.</p>
+        <ul class="chapter-card__topics">
+          <li>resources/ — Blade, JS, CSS</li>
+          <li>public/ — web root, uploads</li>
+          <li>database/ — migrations, seeds</li>
+          <li>config/ — app settings</li>
+          <li>app/ — models, controllers</li>
+        </ul>
+        <span class="chapter-card__cta" style="color:#0ea5e9;">Begin Chapter →</span>
+      </a>
+
+      <a href="html/chapter2.html" class="chapter-card chapter-card--2 reveal">
+        <div class="chapter-card__num">02</div>
+        <div class="chapter-card__icon">🗄️</div>
+        <h3 class="chapter-card__title">Database & Models</h3>
+        <p class="chapter-card__desc">MySQL, MariaDB config in Laragon. Migrations, Seeders, Factories, and Eloquent ORM relationships.</p>
+        <ul class="chapter-card__topics">
+          <li>MySQL vs MariaDB</li>
+          <li>Migrations & schemas</li>
+          <li>Eloquent relationships</li>
+          <li>Query Builder</li>
+          <li>Database seeding</li>
+        </ul>
+        <span class="chapter-card__cta">Begin Chapter →</span>
+      </a>
+
+      <a href="html/chapter3.html" class="chapter-card chapter-card--3 reveal">
+        <div class="chapter-card__num">03</div>
+        <div class="chapter-card__icon">🔐</div>
+        <h3 class="chapter-card__title">Auth & Login System</h3>
+        <p class="chapter-card__desc">Full authentication with Laravel Breeze & Sanctum. Login, register, roles, middleware, and session management.</p>
+        <ul class="chapter-card__topics">
+          <li>Laravel Breeze</li>
+          <li>Login & Register</li>
+          <li>Middleware guards</li>
+          <li>Role-based access</li>
+          <li>API tokens (Sanctum)</li>
+        </ul>
+        <span class="chapter-card__cta">Begin Chapter →</span>
+      </a>
+
+      <a href="html/chapter-guest-auth.html" class="chapter-card reveal" style="border-color:rgba(255,211,42,0.2);background:rgba(255,211,42,0.03);">
+        <div class="chapter-card__num" style="background:linear-gradient(135deg,var(--accent-yellow),var(--accent-orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">3.5</div>
+        <div class="chapter-card__icon">🔀</div>
+        <h3 class="chapter-card__title">Guest vs Auth Users</h3>
+        <p class="chapter-card__desc">Full control over what guests see vs logged-in users. Dynamic nav, route guards, AJAX 401 handling, guest cart, and cart merge on login.</p>
+        <ul class="chapter-card__topics">
+          <li>@guest / @auth Blade</li>
+          <li>Route middleware guards</li>
+          <li>Redirect intended flow</li>
+          <li>AJAX 401 handling</li>
+          <li>Guest cart + merge</li>
+        </ul>
+        <span class="chapter-card__cta" style="color:var(--accent-yellow);">Begin Chapter →</span>
+      </a>
+
+      <a href="html/chapter4.html" class="chapter-card chapter-card--4 reveal">
+        <div class="chapter-card__num">04</div>
+        <div class="chapter-card__icon">🛒</div>
+        <h3 class="chapter-card__title">E-Commerce App</h3>
+        <p class="chapter-card__desc">Build a full store — products, cart, orders, AJAX add-to-cart, data retrieval, and admin dashboard.</p>
+        <ul class="chapter-card__topics">
+          <li>Product CRUD</li>
+          <li>AJAX add-to-cart</li>
+          <li>Order management</li>
+          <li>Send & retrieve data</li>
+          <li>Admin dashboard</li>
+        </ul>
+        <span class="chapter-card__cta">Begin Chapter →</span>
+      </a>
+
+      <a href="html/chapter5.html" class="chapter-card chapter-card--5 reveal">
+        <div class="chapter-card__num">05</div>
+        <div class="chapter-card__icon">🚀</div>
+        <h3 class="chapter-card__title">Deploy to Public</h3>
+        <p class="chapter-card__desc">Launch your app using ngrok, shared hosting, or a VPS. Configure .env, optimize, and go live.</p>
+        <ul class="chapter-card__topics">
+          <li>ngrok quick share</li>
+          <li>Shared hosting deploy</li>
+          <li>VPS with Nginx</li>
+          <li>.env production config</li>
+          <li>SSL & domain setup</li>
+        </ul>
+        <span class="chapter-card__cta">Begin Chapter →</span>
+      </a>
+
+      <div class="chapter-card chapter-card--bonus reveal">
+        <div class="chapter-card__num">+</div>
+        <div class="chapter-card__icon">💡</div>
+        <h3 class="chapter-card__title">Bonus: Debug Guide</h3>
+        <p class="chapter-card__desc">The most common Laravel errors and exactly how to fix them. From 500 errors to SQLSTATE exceptions.</p>
+        <ul class="chapter-card__topics">
+          <li>500 / CSRF errors</li>
+          <li>Migration errors</li>
+          <li>Composer conflicts</li>
+          <li>PHP version issues</li>
+          <li>Artisan key:generate</li>
+        </ul>
+        <span class="chapter-card__badge">Included Free</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== TECH STACK ===== -->
+  <section class="techstack reveal-section">
+    <div class="section-header">
+      <p class="section-header__label">// tools you'll master</p>
+      <h2 class="section-header__title">The Full Stack</h2>
+    </div>
+    <div class="techstack__grid">
+      <div class="tech-item reveal"><div class="tech-item__icon">🐘</div><span>PHP 8.x</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🔴</div><span>Laravel 8</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🔴</div><span>Laravel 12</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🦎</div><span>Laragon</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🐬</div><span>MySQL</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🦭</div><span>MariaDB</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">📦</div><span>Composer</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">⚡</div><span>Artisan CLI</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🎨</div><span>Blade</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🔄</div><span>AJAX / Fetch</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🔐</div><span>Breeze Auth</span></div>
+      <div class="tech-item reveal"><div class="tech-item__icon">🌐</div><span>ngrok / VPS</span></div>
+    </div>
+  </section>
+
+  <!-- ===== PREVIEW CODE ===== -->
+  <section class="code-preview reveal-section">
+    <div class="section-header">
+      <p class="section-header__label">// sneak peek</p>
+      <h2 class="section-header__title">What You'll Write</h2>
+    </div>
+    <div class="code-preview__tabs">
+      <button class="tab-btn tab-btn--active" data-tab="migration">Migration</button>
+      <button class="tab-btn" data-tab="model">Model</button>
+      <button class="tab-btn" data-tab="controller">Controller</button>
+      <button class="tab-btn" data-tab="ajax">AJAX</button>
+    </div>
+    <div class="code-preview__window">
+      <div class="code-window">
+        <div class="code-window__bar">
+          <span class="code-window__dot code-window__dot--red"></span>
+          <span class="code-window__dot code-window__dot--yellow"></span>
+          <span class="code-window__dot code-window__dot--green"></span>
+          <span class="code-window__title" id="codeTabTitle">database/migrations/create_products_table.php</span>
+        </div>
+        <pre class="code-window__body code-window__body--pre" id="codeTabContent"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span>LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </div>
+    <p class="footer__sub">Built for developers, by developers. Laravel 8 & 12 complete guide.</p>
+    <div class="footer__links">
+      <a href="html/chapter1.html">Chapter 1</a>
+      <a href="html/chapter-folders.html">Folders</a>
+      <a href="html/chapter2.html">Chapter 2</a>
+      <a href="html/chapter3.html">Chapter 3</a>
+      <a href="html/chapter-guest-auth.html">Guest/Auth</a>
+      <a href="html/chapter4.html">Chapter 4</a>
+      <a href="html/chapter5.html">Chapter 5</a>
+    </div>
+    <p class="footer__copy">© 2025 LaravelMastery Tutorial. Made with ❤️ for the PHP community.</p>
+  </footer>
+
+  <script src="js/canvas.js"></script>
+  <script src="js/terminal.js"></script>
+  <script src="js/scroll.js"></script>
+  <script src="js/tabs.js"></script>
+  <script src="js/nav.js"></script>
+</body>
+</html>

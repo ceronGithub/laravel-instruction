@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chapter 5 — Deploy to Public | Laravel Mastery</title>
+
+<link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </a>
+    <div class="nav__links">
+      <a href="chapter1.html">Setup</a>
+      <a href="chapter-folders.html">Folders</a>
+      <a href="chapter2.html">Database</a>
+      <a href="chapter3.html">Auth</a>
+      <a href="chapter-guest-auth.html">Guest/Auth</a>
+      <a href="chapter4.html">E-Com</a>
+      <a href="chapter5.html" style="color:var(--accent-red)">Deploy</a>
+    </div>
+    <a href="../index.html" class="nav__badge" title="Back to Home — Deploy"><span class="nav__badge-num">Ch.05</span> · Deploy</a>
+  </nav>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="chapter-page">
+    <div class="chapter-hero">
+      <p class="chapter-hero__num">// CHAPTER 05</p>
+      <h1 class="chapter-hero__title">Deploy to Public</h1>
+      <p class="chapter-hero__desc">
+        Launch your Laravel app so anyone on the internet can access it.
+        We'll cover three methods: <strong>ngrok</strong> for instant sharing,
+        <strong>shared hosting</strong> for budget deployment,
+        and a <strong>VPS with Nginx</strong> for full control.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <span class="badge badge--green">ngrok</span>
+        <span class="badge badge--blue">cPanel / Hosting</span>
+        <span class="badge badge--red">VPS + Nginx</span>
+        <span class="badge badge--yellow">SSL / HTTPS</span>
+      </div>
+    </div>
+
+    <div class="chapter-layout">
+      <aside>
+        <div class="toc">
+          <p class="toc__title">// Contents</p>
+          <ul class="toc__list">
+            <li class="toc__item"><a href="#ngrok">1. ngrok (Quick Share)</a></li>
+            <li class="toc__item"><a href="#envprod">2. .env for Production</a></li>
+            <li class="toc__item"><a href="#hosting">3. Shared Hosting</a></li>
+            <li class="toc__item"><a href="#vps">4. VPS + Nginx</a></li>
+            <li class="toc__item"><a href="#ssl">5. SSL Certificate</a></li>
+            <li class="toc__item"><a href="#optimize">6. Optimize Commands</a></li>
+          </ul>
+        </div>
+      </aside>
+
+      <main>
+
+        <!-- STEP 1 -->
+        <div class="step reveal" id="ngrok">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <h2 class="step__title">ngrok — Instant Public URL</h2>
+            <p class="step__desc">
+              ngrok creates a secure tunnel from a public URL to your local Laragon server.
+              Perfect for demos, client previews, or testing webhooks.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — setup ngrok</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># 1. Download ngrok from ngrok.com/download</span>
+<span class="cm"># 2. Create free account and get your authtoken</span>
+<span class="cm"># 3. Configure ngrok</span>
+<span class="t-prompt">$</span> ngrok config add-authtoken YOUR_TOKEN_HERE
+
+<span class="cm"># 4. Make sure your Laravel is running:</span>
+<span class="t-prompt">$</span> php artisan serve
+<span class="cm">#    Running on http://127.0.0.1:8000</span>
+
+<span class="cm"># 5. In a NEW terminal, start ngrok tunnel:</span>
+<span class="t-prompt">$</span> ngrok http 8000</pre>
+            </div>
+
+            <div class="mockup-frame">
+              <div class="mockup-frame__bar">
+                <div class="mockup-frame__dots">
+                  <div class="mockup-frame__dot mockup-frame__dot--r"></div>
+                  <div class="mockup-frame__dot mockup-frame__dot--y"></div>
+                  <div class="mockup-frame__dot mockup-frame__dot--g"></div>
+                </div>
+                <div class="mockup-frame__url">ngrok tunnel output</div>
+              </div>
+              <div class="mockup-frame__body">
+                <div style="font-family:var(--font-mono);font-size:0.8rem;line-height:2;">
+                  <div><span style="color:var(--accent-green);">Session Status</span>     online</div>
+                  <div><span style="color:var(--accent-blue);">Account</span>           <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="037a6c76716d626e6643666e626a6f2d606c6e">[email&#160;protected]</a></div>
+                  <div><span style="color:var(--accent-blue);">Version</span>           3.x.x</div>
+                  <div><span style="color:var(--accent-green);">Forwarding</span>        <span style="color:var(--accent-yellow);">https://abc1234.ngrok-free.app → http://localhost:8000</span></div>
+                  <div style="color:var(--text-muted);">Connections        ttl=0 opn=0 rt1=0.00 rt5=0.00 p50=0</div>
+                </div>
+              </div>
+            </div>
+
+            <p class="step__desc" style="margin-top:16px;">
+              Now share <strong style="color:var(--accent-yellow);">https://abc1234.ngrok-free.app</strong> with anyone!
+              Your local Laravel app is instantly public. No hosting needed.
+            </p>
+
+            <div class="info-box info-box--warn">
+              <div class="info-box__icon">⚠️</div>
+              <div class="info-box__text">
+                <strong>Trusted hosts:</strong> Add the ngrok URL to your <code>.env</code> and
+                <code>config/app.php</code> trusted hosts, or Laravel may reject requests.
+                Set <code>APP_URL=https://abc1234.ngrok-free.app</code> in your .env.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step reveal" id="envprod">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <h2 class="step__title">Production .env Settings</h2>
+            <p class="step__desc">
+              Before going live, update your <code>.env</code> to turn off debug mode and set the production URL:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">.env — production settings</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># CRITICAL: Turn off debug in production!</span>
+<span class="var">APP_ENV</span>=<span class="str">production</span>
+<span class="var">APP_DEBUG</span>=<span class="str">false</span>
+<span class="var">APP_URL</span>=<span class="str">https://yourapp.com</span>
+
+<span class="cm"># Database on your server</span>
+<span class="var">DB_HOST</span>=<span class="str">127.0.0.1</span>
+<span class="var">DB_DATABASE</span>=<span class="str">yourdb_name</span>
+<span class="var">DB_USERNAME</span>=<span class="str">yourdb_user</span>
+<span class="var">DB_PASSWORD</span>=<span class="str">your_strong_password</span>
+
+<span class="cm"># Use file cache in production (faster)</span>
+<span class="var">CACHE_DRIVER</span>=<span class="str">file</span>
+<span class="var">SESSION_DRIVER</span>=<span class="str">database</span>
+<span class="var">QUEUE_CONNECTION</span>=<span class="str">database</span></pre>
+            </div>
+
+            <div class="info-box info-box--error">
+              <div class="info-box__icon">🚨</div>
+              <div class="info-box__text">
+                <strong>NEVER commit .env to Git!</strong> The .env file is already in <code>.gitignore</code> by default.
+                Always copy it manually to your server or use environment variables through your hosting panel.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step reveal" id="hosting">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <h2 class="step__title">Deploy to Shared Hosting (cPanel)</h2>
+            <p class="step__desc">
+              Budget-friendly option. Works on Hostinger, Namecheap, etc. The trick is pointing the
+              domain to Laravel's <code>public/</code> folder.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Step-by-step shared hosting deploy</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># 1. On your local machine — ZIP the project (exclude vendor/ and node_modules/)</span>
+<span class="cm"># 2. Upload via cPanel File Manager to /home/username/laravel-shop</span>
+<span class="cm"># 3. Upload /public to /home/username/public_html</span>
+
+<span class="cm"># 4. Edit public_html/index.php — fix paths:</span>
+<span class="kw">require</span> __DIR__.<span class="str">'/../laravel-shop/vendor/autoload.php'</span>;
+<span class="var">$app</span> = <span class="kw">require_once</span> __DIR__.<span class="str">'/../laravel-shop/bootstrap/app.php'</span>;
+
+<span class="cm"># 5. In cPanel Terminal (or SSH):</span>
+<span class="t-prompt">$</span> cd /home/username/laravel-shop
+<span class="t-prompt">$</span> composer install --no-dev --optimize-autoloader
+<span class="t-prompt">$</span> php artisan key:generate
+<span class="t-prompt">$</span> php artisan migrate --force
+<span class="t-prompt">$</span> php artisan storage:link</pre>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">💡</div>
+              <div class="info-box__text">
+                <strong>Hostinger tip:</strong> They now offer a one-click Laravel installer in hPanel.
+                Just click "Auto Install" and it handles the folder structure for you.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step reveal" id="vps">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <h2 class="step__title">VPS Deployment with Nginx</h2>
+            <p class="step__desc">
+              Full control. Use DigitalOcean, Vultr, or any Ubuntu VPS. We'll use Nginx + PHP-FPM.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — server setup (Ubuntu 22.04)</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Install dependencies</span>
+<span class="t-prompt">$</span> sudo apt update
+<span class="t-prompt">$</span> sudo apt install nginx php8.2-fpm php8.2-mysql php8.2-mbstring \
+    php8.2-xml php8.2-curl php8.2-zip composer mysql-server -y
+
+<span class="cm"># Clone your project</span>
+<span class="t-prompt">$</span> cd /var/www
+<span class="t-prompt">$</span> git clone https://github.com/you/laravel-shop.git
+<span class="t-prompt">$</span> cd laravel-shop
+<span class="t-prompt">$</span> composer install --no-dev --optimize-autoloader
+<span class="t-prompt">$</span> cp .env.example .env
+<span class="t-prompt">$</span> php artisan key:generate
+<span class="t-prompt">$</span> php artisan migrate --force
+<span class="t-prompt">$</span> php artisan storage:link
+<span class="t-prompt">$</span> sudo chown -R www-data:www-data /var/www/laravel-shop/storage
+<span class="t-prompt">$</span> sudo chown -R www-data:www-data /var/www/laravel-shop/bootstrap/cache</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">/etc/nginx/sites-available/laravel-shop</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre>server {
+    listen 80;
+    server_name yourapp.com www.yourapp.com;
+    root /var/www/laravel-shop/public;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — enable the site</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> sudo ln -s /etc/nginx/sites-available/laravel-shop \
+    /etc/nginx/sites-enabled/
+<span class="t-prompt">$</span> sudo nginx -t   <span class="cm"># test config</span>
+<span class="t-prompt">$</span> sudo systemctl reload nginx
+<span class="t-success">✓  Your app is now live at http://yourapp.com</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step reveal" id="ssl">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <h2 class="step__title">Free SSL with Let's Encrypt</h2>
+            <p class="step__desc">
+              Add HTTPS to your domain using Certbot — it's free and auto-renews.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre"><span class="t-prompt">$</span> sudo apt install certbot python3-certbot-nginx -y
+<span class="t-prompt">$</span> sudo certbot --nginx -d yourapp.com -d www.yourapp.com
+
+<span class="cm"># Follow prompts — certbot configures Nginx automatically!</span>
+<span class="t-success">✓  Certificate issued: /etc/letsencrypt/live/yourapp.com/</span>
+<span class="t-success">✓  Nginx configured for HTTPS auto-redirect</span>
+<span class="t-success">✓  Auto-renewal set via systemd timer</span></pre>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">🔒</div>
+              <div class="info-box__text">
+                <strong>Update your .env after SSL:</strong> Change <code>APP_URL=https://yourapp.com</code>
+                (https, not http), then run <code>php artisan config:cache</code> to apply it.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step reveal" id="optimize">
+          <div class="step__num">6</div>
+          <div class="step__content">
+            <h2 class="step__title">Production Optimize Commands</h2>
+            <p class="step__desc">
+              Run these commands after every deployment to cache config, routes, and views for maximum performance:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — deploy script</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">#!/bin/bash — deploy.sh</span>
+<span class="t-prompt">$</span> git pull origin main
+
+<span class="t-prompt">$</span> composer install --no-dev --optimize-autoloader
+
+<span class="t-prompt">$</span> php artisan config:cache    <span class="cm"># Cache .env & config files</span>
+<span class="t-prompt">$</span> php artisan route:cache     <span class="cm"># Cache all routes</span>
+<span class="t-prompt">$</span> php artisan view:cache      <span class="cm"># Precompile Blade templates</span>
+<span class="t-prompt">$</span> php artisan event:cache     <span class="cm"># Cache event listeners</span>
+
+<span class="t-prompt">$</span> php artisan migrate --force <span class="cm"># Apply any new migrations</span>
+
+<span class="t-success">✓  Deployment complete!</span>
+
+<span class="cm"># If something breaks, clear all caches:</span>
+<span class="t-prompt">$</span> php artisan optimize:clear</pre>
+            </div>
+
+            <!-- FINAL SUMMARY -->
+            <div style="margin-top:32px;padding:28px;background:linear-gradient(135deg,rgba(255,71,87,0.08),rgba(78,205,196,0.06));border:1px solid rgba(255,71,87,0.2);border-radius:var(--radius-lg);">
+              <h3 style="font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin-bottom:16px;">🎉 You've completed the entire course!</h3>
+              <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.7;margin-bottom:16px;">
+                You've gone from zero to a fully deployed Laravel e-commerce application. Here's what you've built:
+              </p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ Laragon + Laravel 8 & 12</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ MySQL/MariaDB + Migrations</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ Eloquent ORM + Relations</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ Full Auth with Breeze</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ Role-based Middleware</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ AJAX Add-to-Cart</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ Order Management</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ Admin CRUD Dashboard</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ ngrok Quick Deploy</div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-green);">✅ VPS + Nginx + SSL</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chapter-nav">
+          <a href="chapter4.html" class="chapter-nav__link">
+            <span class="chapter-nav__label">← Previous</span>
+            <span class="chapter-nav__title">E-Commerce App</span>
+          </a>
+          <a href="../index.html" class="chapter-nav__link chapter-nav__link--next">
+            <span class="chapter-nav__label">← Back to</span>
+            <span class="chapter-nav__title">Home</span>
+          </a>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script data-cfa
+
+  <script src="../js/canvas.js"></script>
+  <script src="../js/scroll.js"></script>
+  <script src="../js/nav.js"></script>
+</body>
+</html>

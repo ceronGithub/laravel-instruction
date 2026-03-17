@@ -8,57 +8,53 @@
   <link rel="stylesheet" href="../css/components.css"/>
   <link rel="stylesheet" href="../css/animations.css"/>
   <style>
-    /* ── AJAX Chapter specific styles ── */
+    /* ═══════════════════════════════════════════
+       AJAX CHAPTER — all overflow/layout fixed
+    ═══════════════════════════════════════════ */
+
+    /* ── Flow diagram — vertical numbered list ── */
     .ajax-flow {
-      display: flex;
-      align-items: center;
-      gap: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       margin: 24px 0;
-      overflow-x: auto;
-      padding: 4px 0 12px;
     }
-    .ajax-flow__node {
-      flex-shrink: 0;
-      padding: 12px 18px;
+    @media (max-width: 600px) {
+      .ajax-flow { grid-template-columns: 1fr; }
+    }
+    .ajax-flow__step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
       border-radius: 10px;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
-      text-align: center;
+      font-size: 0.78rem;
       line-height: 1.5;
-      min-width: 110px;
     }
-    .ajax-flow__node--browser  { background: rgba(78,205,196,0.12);  border: 1px solid rgba(78,205,196,0.3);  color: var(--accent-blue); }
-    .ajax-flow__node--js       { background: rgba(255,211,42,0.12);  border: 1px solid rgba(255,211,42,0.3);  color: var(--accent-yellow); }
-    .ajax-flow__node--route    { background: rgba(255,71,87,0.12);   border: 1px solid rgba(255,71,87,0.3);   color: var(--accent-red); }
-    .ajax-flow__node--ctrl     { background: rgba(168,85,247,0.12);  border: 1px solid rgba(168,85,247,0.3);  color: var(--accent-purple); }
-    .ajax-flow__node--db       { background: rgba(16,185,129,0.12);  border: 1px solid rgba(16,185,129,0.3);  color: var(--accent-green); }
-    .ajax-flow__node--json     { background: rgba(255,107,53,0.12);  border: 1px solid rgba(255,107,53,0.3);  color: var(--accent-orange); }
-    .ajax-flow__arrow {
+    .ajax-flow__step-num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700;
       flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      padding: 0 6px;
+      background: currentColor;
     }
-    .ajax-flow__arrow-line {
-      width: 32px;
-      height: 2px;
-      background: var(--border);
+    .ajax-flow__step-num span {
+      color: #0a0a0f;
     }
-    .ajax-flow__arrow-label {
-      font-family: var(--font-mono);
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-    .ajax-flow__arrow-tip {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      margin-top: -4px;
-    }
+    .ajax-flow__step-body {}
+    .ajax-flow__step-title { font-weight: 700; display: block; margin-bottom: 2px; }
+    .ajax-flow__step-sub   { font-size: 0.68rem; opacity: 0.7; }
+    .ajax-flow__step--1 { background: rgba(78,205,196,0.1);  border: 1px solid rgba(78,205,196,0.3);  color: var(--accent-blue); }
+    .ajax-flow__step--2 { background: rgba(255,211,42,0.1);  border: 1px solid rgba(255,211,42,0.3);  color: var(--accent-yellow); }
+    .ajax-flow__step--3 { background: rgba(255,71,87,0.1);   border: 1px solid rgba(255,71,87,0.3);   color: var(--accent-red); }
+    .ajax-flow__step--4 { background: rgba(168,85,247,0.1);  border: 1px solid rgba(168,85,247,0.3);  color: var(--accent-purple); }
+    .ajax-flow__step--5 { background: rgba(16,185,129,0.1);  border: 1px solid rgba(16,185,129,0.3);  color: var(--accent-green); }
+    .ajax-flow__step--6 { background: rgba(255,107,53,0.1);  border: 1px solid rgba(255,107,53,0.3);  color: var(--accent-orange); }
+    .ajax-flow__step--7 { background: rgba(255,71,87,0.1);   border: 1px solid rgba(255,71,87,0.3);   color: var(--accent-red); }
 
-    /* Live demo mockup */
+    /* ── Demo boxes ── */
     .demo-box {
       border-radius: var(--radius-lg);
       border: 1px solid var(--border);
@@ -69,9 +65,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 8px;
       padding: 12px 20px;
       background: rgba(255,255,255,0.03);
       border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
     }
     .demo-box__title {
       font-family: var(--font-mono);
@@ -87,64 +85,54 @@
       border: 1px solid rgba(0,214,143,0.25);
       color: var(--accent-green);
     }
-    .demo-box__body {
-      padding: 20px;
-    }
+    .demo-box__body { padding: 16px 20px; }
 
-    /* product list mockup items */
+    /* ── Demo product items ── */
     .demo-item {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 12px 14px;
+      gap: 12px;
+      padding: 10px 12px;
       border-radius: 8px;
       background: rgba(255,255,255,0.03);
       border: 1px solid var(--border);
       margin-bottom: 8px;
-      transition: var(--transition);
     }
     .demo-item:last-child { margin-bottom: 0; }
     .demo-item__img {
-      width: 44px; height: 44px;
+      width: 38px; height: 38px;
       border-radius: 8px;
       background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; flex-shrink: 0;
+      font-size: 1.1rem; flex-shrink: 0;
     }
-    .demo-item__name {
-      font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-    .demo-item__price {
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      color: var(--accent-green);
-    }
-    .demo-item__cat {
-      font-size: 0.72rem;
-      color: var(--text-muted);
-    }
+    .demo-item__info { flex: 1; min-width: 0; }
+    .demo-item__name  { font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .demo-item__price { font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-green); }
+    .demo-item__cat   { font-size: 0.7rem; color: var(--text-muted); }
     .demo-item__btn {
-      margin-left: auto;
-      padding: 5px 12px;
+      flex-shrink: 0;
+      padding: 5px 10px;
       border-radius: 6px;
       background: rgba(255,71,87,0.12);
       border: 1px solid rgba(255,71,87,0.25);
       color: var(--accent-red);
       font-family: var(--font-mono);
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       cursor: pointer;
-      white-space: nowrap;
     }
+
+    /* ── Search bar ── */
     .demo-search {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+      align-items: center;
     }
     .demo-input {
       flex: 1;
-      padding: 8px 14px;
+      min-width: 0;
+      padding: 8px 12px;
       border-radius: 8px;
       background: rgba(255,255,255,0.05);
       border: 1px solid var(--border);
@@ -155,15 +143,15 @@
     }
     .demo-input:focus { border-color: var(--accent-blue); }
     .demo-btn {
-      padding: 8px 16px;
+      flex-shrink: 0;
+      padding: 8px 14px;
       border-radius: 8px;
       background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
       color: white;
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       border: none;
       cursor: pointer;
-      white-space: nowrap;
     }
     .demo-spinner {
       display: none;
@@ -172,26 +160,27 @@
       border-top-color: var(--accent-red);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .demo-empty {
       text-align: center;
-      padding: 24px;
+      padding: 20px;
       font-family: var(--font-mono);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
     }
 
-    /* method comparison cards */
+    /* ── Method comparison grid ── */
     .method-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 14px;
       margin: 20px 0;
     }
-    @media (max-width: 700px) { .method-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .method-grid { grid-template-columns: 1fr; } }
     .method-card {
-      padding: 20px;
+      padding: 18px;
       border-radius: var(--radius);
       border: 1px solid var(--border);
       background: var(--bg-card);
@@ -199,8 +188,8 @@
     .method-card__title {
       font-family: var(--font-display);
       font-weight: 700;
-      font-size: 0.95rem;
-      margin-bottom: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -209,21 +198,23 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
     .method-card__list li {
       font-size: 0.82rem;
       color: var(--text-secondary);
       padding-left: 14px;
       position: relative;
+      line-height: 1.5;
     }
-    .method-card__list li::before { content: '·'; position: absolute; left: 4px; }
+    .method-card__list li::before { content: "·"; position: absolute; left: 4px; }
 
-    /* pagination demo */
+    /* ── Pagination demo ── */
     .demo-pagination {
       display: flex;
       gap: 6px;
       justify-content: center;
+      flex-wrap: wrap;
       margin-top: 14px;
     }
     .demo-page-btn {
@@ -243,9 +234,25 @@
       border-color: var(--accent-red);
       color: var(--accent-red);
     }
-    .demo-page-btn:hover:not(.active) {
-      border-color: var(--text-muted);
-      color: var(--text-primary);
+    .demo-page-btn:hover:not(.active) { border-color: var(--text-muted); color: var(--text-primary); }
+
+    /* ── Category filter buttons ── */
+    #demoCatBtns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .cat-filter-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .cat-filter-btn.active {
+      background: rgba(255,71,87,0.15);
+      border-color: rgba(255,71,87,0.4);
+      color: var(--accent-red);
     }
   </style>
 </head>
@@ -332,37 +339,55 @@
 
             <!-- FLOW DIAGRAM -->
             <div class="ajax-flow">
-              <div class="ajax-flow__node ajax-flow__node--browser">🖥️<br>Browser<br><small>User types/clicks</small></div>
-              <div class="ajax-flow__arrow">
-                <div class="ajax-flow__arrow-line"></div>
-                <div class="ajax-flow__arrow-label">fetch()</div>
-                <div class="ajax-flow__arrow-tip">▸</div>
+              <div class="ajax-flow__step ajax-flow__step--1">
+                <div class="ajax-flow__step-num"><span>1</span></div>
+                <div class="ajax-flow__step-body">
+                  <span class="ajax-flow__step-title">🖥️ Browser</span>
+                  <span class="ajax-flow__step-sub">User types search / clicks filter</span>
+                </div>
               </div>
-              <div class="ajax-flow__node ajax-flow__node--js">⚡<br>JavaScript<br><small>Fetch API</small></div>
-              <div class="ajax-flow__arrow">
-                <div class="ajax-flow__arrow-line"></div>
-                <div class="ajax-flow__arrow-label">HTTP GET/POST</div>
-                <div class="ajax-flow__arrow-tip">▸</div>
+              <div class="ajax-flow__step ajax-flow__step--2">
+                <div class="ajax-flow__step-num"><span>2</span></div>
+                <div class="ajax-flow__step-body">
+                  <span class="ajax-flow__step-title">⚡ JavaScript</span>
+                  <span class="ajax-flow__step-sub">fetch() sends silent HTTP request</span>
+                </div>
               </div>
-              <div class="ajax-flow__node ajax-flow__node--route">🔀<br>Laravel<br><small>routes/web.php</small></div>
-              <div class="ajax-flow__arrow">
-                <div class="ajax-flow__arrow-line"></div>
-                <div class="ajax-flow__arrow-label">calls</div>
-                <div class="ajax-flow__arrow-tip">▸</div>
+              <div class="ajax-flow__step ajax-flow__step--3">
+                <div class="ajax-flow__step-num"><span>3</span></div>
+                <div class="ajax-flow__step-body">
+                  <span class="ajax-flow__step-title">🔀 Laravel Route</span>
+                  <span class="ajax-flow__step-sub">routes/web.php matches the URL</span>
+                </div>
               </div>
-              <div class="ajax-flow__node ajax-flow__node--ctrl">🎮<br>Controller<br><small>queries DB</small></div>
-              <div class="ajax-flow__arrow">
-                <div class="ajax-flow__arrow-line"></div>
-                <div class="ajax-flow__arrow-label">Eloquent</div>
-                <div class="ajax-flow__arrow-tip">▸</div>
+              <div class="ajax-flow__step ajax-flow__step--4">
+                <div class="ajax-flow__step-num"><span>4</span></div>
+                <div class="ajax-flow__step-body">
+                  <span class="ajax-flow__step-title">🎮 Controller</span>
+                  <span class="ajax-flow__step-sub">Runs the query via Eloquent</span>
+                </div>
               </div>
-              <div class="ajax-flow__node ajax-flow__node--db">🗄️<br>Database<br><small>MySQL/MariaDB</small></div>
-              <div class="ajax-flow__arrow">
-                <div class="ajax-flow__arrow-line"></div>
-                <div class="ajax-flow__arrow-label">response()->json()</div>
-                <div class="ajax-flow__arrow-tip">▸</div>
+              <div class="ajax-flow__step ajax-flow__step--5">
+                <div class="ajax-flow__step-num"><span>5</span></div>
+                <div class="ajax-flow__step-body">
+                  <span class="ajax-flow__step-title">🗄️ Database</span>
+                  <span class="ajax-flow__step-sub">MySQL/MariaDB returns results</span>
+                </div>
               </div>
-              <div class="ajax-flow__node ajax-flow__node--json">📦<br>JSON<br><small>back to JS</small></div>
+              <div class="ajax-flow__step ajax-flow__step--6">
+                <div class="ajax-flow__step-num"><span>6</span></div>
+                <div class="ajax-flow__step-body">
+                  <span class="ajax-flow__step-title">📦 JSON Response</span>
+                  <span class="ajax-flow__step-sub">response()->json() sends data back</span>
+                </div>
+              </div>
+              <div class="ajax-flow__step ajax-flow__step--7" style="grid-column: 1 / -1;">
+                <div class="ajax-flow__step-num"><span>7</span></div>
+                <div class="ajax-flow__step-body">
+                  <span class="ajax-flow__step-title">✅ JavaScript updates the DOM</span>
+                  <span class="ajax-flow__step-sub">Page updates instantly — no reload, no flash, no lost scroll position</span>
+                </div>
+              </div>
             </div>
 
             <div class="method-grid">
@@ -657,17 +682,25 @@ searchInput.<span class="fn">addEventListener</span>(<span class="str">'input'</
                 <span class="demo-box__badge">⚡ Simulated AJAX</span>
               </div>
               <div class="demo-box__body">
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="demoCatBtns">
-                  <button class="demo-btn" style="background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.3);color:var(--accent-red);" onclick="filterDemo('all')">All</button>
-                  <button class="demo-btn" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);" onclick="filterDemo('electronics')">Electronics</button>
-                  <button class="demo-btn" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);" onclick="filterDemo('clothing')">Clothing</button>
-                  <button class="demo-btn" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);" onclick="filterDemo('books')">Books</button>
+                <div id="demoCatBtns">
+                  <button class="cat-filter-btn active" onclick="filterDemo('all',this)">All</button>
+                  <button class="cat-filter-btn" onclick="filterDemo('electronics',this)">Electronics</button>
+                  <button class="cat-filter-btn" onclick="filterDemo('clothing',this)">Clothing</button>
+                  <button class="cat-filter-btn" onclick="filterDemo('books',this)">Books</button>
                 </div>
                 <div id="demoCatResults">
-                  <div class="demo-item"><div class="demo-item__img">💻</div><div><div class="demo-item__name">MacBook Pro M3</div><div class="demo-item__price">₱89,999</div><div class="demo-item__cat">Electronics</div></div><button class="demo-item__btn">View →</button></div>
-                  <div class="demo-item"><div class="demo-item__img">👟</div><div><div class="demo-item__name">Nike Air Max 270</div><div class="demo-item__price">₱6,500</div><div class="demo-item__cat">Clothing</div></div><button class="demo-item__btn">View →</button></div>
-                  <div class="demo-item"><div class="demo-item__img">📱</div><div><div class="demo-item__name">iPhone 16 Pro</div><div class="demo-item__price">₱69,990</div><div class="demo-item__cat">Electronics</div></div><button class="demo-item__btn">View →</button></div>
-                  <div class="demo-item"><div class="demo-item__img">📚</div><div><div class="demo-item__name">Clean Code</div><div class="demo-item__price">₱1,200</div><div class="demo-item__cat">Books</div></div><button class="demo-item__btn">View →</button></div>
+                  <div class="demo-item"><div class="demo-item__img">💻</div>
+                  <div class="demo-item__info"><div class="demo-item__name">MacBook Pro M3</div><div class="demo-item__price">₱89,999</div><div class="demo-item__cat">Electronics</div></div>
+                  <button class="demo-item__btn">View →</button></div>
+                  <div class="demo-item"><div class="demo-item__img">👟</div>
+                  <div class="demo-item__info"><div class="demo-item__name">Nike Air Max 270</div><div class="demo-item__price">₱6,500</div><div class="demo-item__cat">Clothing</div></div>
+                  <button class="demo-item__btn">View →</button></div>
+                  <div class="demo-item"><div class="demo-item__img">📱</div>
+                  <div class="demo-item__info"><div class="demo-item__name">iPhone 16 Pro</div><div class="demo-item__price">₱69,990</div><div class="demo-item__cat">Electronics</div></div>
+                  <button class="demo-item__btn">View →</button></div>
+                  <div class="demo-item"><div class="demo-item__img">📚</div>
+                  <div class="demo-item__info"><div class="demo-item__name">Clean Code</div><div class="demo-item__price">₱1,200</div><div class="demo-item__cat">Books</div></div>
+                  <button class="demo-item__btn">View →</button></div>
                 </div>
               </div>
             </div>
@@ -1274,10 +1307,10 @@ searchInput.<span class="fn">addEventListener</span>(<span class="str">'input'</
       resultsDiv.innerHTML = items.map(function(p) {
         return '<div class="demo-item">' +
           '<div class="demo-item__img">' + p.icon + '</div>' +
-          '<div>' +
+          '<div class="demo-item__info">' +
             '<div class="demo-item__name">' + p.name + '</div>' +
             '<div class="demo-item__price">' + p.price + '</div>' +
-            '<div class="demo-item__cat">' + p.cat + '</div>' +
+            (p.cat ? '<div class="demo-item__cat">' + p.cat + '</div>' : '') +
           '</div>' +
           '<button class="demo-item__btn">View →</button>' +
         '</div>';
@@ -1310,16 +1343,10 @@ searchInput.<span class="fn">addEventListener</span>(<span class="str">'input'</
       { icon:'📚', name:'Clean Code',        price:'₱1,400',  cat:'books' },
     ];
 
-    function filterDemo(cat) {
+    function filterDemo(cat, btn) {
       var btns = document.querySelectorAll('#demoCatBtns button');
-      btns.forEach(function(b) {
-        b.style.background = 'transparent';
-        b.style.borderColor = 'rgba(255,255,255,0.07)';
-        b.style.color = 'var(--text-secondary)';
-      });
-      event.target.style.background = 'rgba(255,71,87,0.15)';
-      event.target.style.borderColor = 'rgba(255,71,87,0.3)';
-      event.target.style.color = 'var(--accent-red)';
+      btns.forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
 
       var container = document.getElementById('demoCatResults');
       container.style.opacity = '0.3';

@@ -24,6 +24,8 @@
       <a href="html/chapter2.html">Database</a>
       <a href="html/chapter3.html">Auth</a>
       <a href="html/chapter-guest-auth.html">Guest/Auth</a>
+      <a href="html/chapter-ajax.html">AJAX</a>
+      <a href="html/chapter-ajax.html">AJAX</a>
       <a href="html/chapter4.html">E-Com</a>
       <a href="html/chapter5.html">Deploy</a>
     </div>
@@ -189,6 +191,21 @@
         <span class="chapter-card__cta" style="color:var(--accent-yellow);">Begin Chapter →</span>
       </a>
 
+      <a href="html/chapter-ajax.html" class="chapter-card reveal" style="border-color:rgba(78,205,196,0.2);background:rgba(78,205,196,0.03);">
+        <div class="chapter-card__num" style="background:linear-gradient(135deg,#4ecdc4,#0ea5e9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">3.7</div>
+        <div class="chapter-card__icon">⚡</div>
+        <h3 class="chapter-card__title">AJAX & Live Data</h3>
+        <p class="chapter-card__desc">Fetch data from your database without reloading the page. Live search, dynamic filters, AJAX pagination, and inject results into Blade.</p>
+        <ul class="chapter-card__topics">
+          <li>JSON routes & controllers</li>
+          <li>Fetch API & async/await</li>
+          <li>Live search with debounce</li>
+          <li>Dynamic category filter</li>
+          <li>AJAX pagination</li>
+        </ul>
+        <span class="chapter-card__cta" style="color:var(--accent-blue);">Begin Chapter →</span>
+      </a>
+
       <a href="html/chapter4.html" class="chapter-card chapter-card--4 reveal">
         <div class="chapter-card__num">04</div>
         <div class="chapter-card__icon">🛒</div>
@@ -284,24 +301,70 @@
     </div>
   </section>
 
-  <!-- ===== FOOTER ===== -->
-  <footer class="footer">
-    <div class="footer__logo">
-      <span class="nav__logo-bracket">{</span>
-      <span>LaravelMastery</span>
-      <span class="nav__logo-bracket">}</span>
+  <footer class="site-footer">
+    <div class="site-footer__top">
+
+      <div class="site-footer__brand">
+        <a href="index.html" class="site-footer__logo">
+          <span class="site-footer__logo-bracket">{</span>
+          <span>LaravelMastery</span>
+          <span class="site-footer__logo-bracket">}</span>
+        </a>
+        <p class="site-footer__tagline">
+          A complete Laravel tutorial series covering setup, database, authentication,
+          AJAX, e-commerce, and deployment — built for Filipino developers.
+        </p>
+        <div class="site-footer__creator">
+          <div class="site-footer__creator-avatar">👨&#x200D;💻</div>
+          <div class="site-footer__creator-info">
+            <div class="site-footer__creator-label">Created by</div>
+            <div class="site-footer__creator-name">Ceron Matthew Calsena</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="site-footer__col-title">// Chapters</p>
+        <ul class="site-footer__links">
+          <li><a href="html/chapter1.html"><span class="link-arrow">▸</span> Ch.01 · Setup &amp; Laragon</a></li>
+          <li><a href="html/chapter-folders.html"><span class="link-arrow">▸</span> Folders · Project Structure</a></li>
+          <li><a href="html/chapter2.html"><span class="link-arrow">▸</span> Ch.02 · Database &amp; Models</a></li>
+          <li><a href="html/chapter3.html"><span class="link-arrow">▸</span> Ch.03 · Auth &amp; Login</a></li>
+          <li><a href="html/chapter-guest-auth.html"><span class="link-arrow">▸</span> Ch.3.5 · Guest vs Auth</a></li>
+          <li><a href="html/chapter-ajax.html"><span class="link-arrow">▸</span> Ch.3.7 · AJAX &amp; Live Data</a></li>
+          <li><a href="html/chapter4.html"><span class="link-arrow">▸</span> Ch.04 · E-Commerce App</a></li>
+          <li><a href="html/chapter5.html"><span class="link-arrow">▸</span> Ch.05 · Deploy to Public</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="site-footer__col-title">// Stack</p>
+        <ul class="site-footer__links">
+          <li><a href="html/chapter1.html"><span class="link-arrow">▸</span> Laravel 8 &amp; 12</a></li>
+          <li><a href="html/chapter1.html"><span class="link-arrow">▸</span> Laragon Local Dev</a></li>
+          <li><a href="html/chapter2.html"><span class="link-arrow">▸</span> MySQL &amp; MariaDB</a></li>
+          <li><a href="html/chapter2.html"><span class="link-arrow">▸</span> Eloquent ORM</a></li>
+          <li><a href="html/chapter3.html"><span class="link-arrow">▸</span> Laravel Breeze Auth</a></li>
+          <li><a href="html/chapter-ajax.html"><span class="link-arrow">▸</span> AJAX / Fetch API</a></li>
+          <li><a href="html/chapter5.html"><span class="link-arrow">▸</span> ngrok &amp; VPS Deploy</a></li>
+        </ul>
+      </div>
+
     </div>
-    <p class="footer__sub">Built for developers, by developers. Laravel 8 & 12 complete guide.</p>
-    <div class="footer__links">
-      <a href="html/chapter1.html">Chapter 1</a>
-      <a href="html/chapter-folders.html">Folders</a>
-      <a href="html/chapter2.html">Chapter 2</a>
-      <a href="html/chapter3.html">Chapter 3</a>
-      <a href="html/chapter-guest-auth.html">Guest/Auth</a>
-      <a href="html/chapter4.html">Chapter 4</a>
-      <a href="html/chapter5.html">Chapter 5</a>
+    <div class="site-footer__bottom">
+      <p class="site-footer__copy">
+        &copy; 2025 <strong>LaravelMastery</strong> &nbsp;&middot;&nbsp; Created by <strong>Ceron Matthew Calsena</strong> &nbsp;&middot;&nbsp; Made with ❤️ for the PHP community
+      </p>
+      <div class="site-footer__stack">
+        <span class="site-footer__stack-label">Built with:</span>
+        <div class="site-footer__stack-tags">
+          <span class="site-footer__stack-tag">HTML</span>
+          <span class="site-footer__stack-tag">CSS</span>
+          <span class="site-footer__stack-tag">Vanilla JS</span>
+          <span class="site-footer__stack-tag">No Framework</span>
+        </div>
+      </div>
     </div>
-    <p class="footer__copy">© 2025 LaravelMastery Tutorial. Made with ❤️ for the PHP community.</p>
   </footer>
 
   <script src="js/canvas.js"></script>

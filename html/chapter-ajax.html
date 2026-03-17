@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AJAX & Live Data | Laravel Mastery</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/components.css"/>
+  <link rel="stylesheet" href="../css/animations.css"/>
+  <style>
+    /* ── AJAX Chapter specific styles ── */
+    .ajax-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 24px 0;
+      overflow-x: auto;
+      padding: 4px 0 12px;
+    }
+    .ajax-flow__node {
+      flex-shrink: 0;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-align: center;
+      line-height: 1.5;
+      min-width: 110px;
+    }
+    .ajax-flow__node--browser  { background: rgba(78,205,196,0.12);  border: 1px solid rgba(78,205,196,0.3);  color: var(--accent-blue); }
+    .ajax-flow__node--js       { background: rgba(255,211,42,0.12);  border: 1px solid rgba(255,211,42,0.3);  color: var(--accent-yellow); }
+    .ajax-flow__node--route    { background: rgba(255,71,87,0.12);   border: 1px solid rgba(255,71,87,0.3);   color: var(--accent-red); }
+    .ajax-flow__node--ctrl     { background: rgba(168,85,247,0.12);  border: 1px solid rgba(168,85,247,0.3);  color: var(--accent-purple); }
+    .ajax-flow__node--db       { background: rgba(16,185,129,0.12);  border: 1px solid rgba(16,185,129,0.3);  color: var(--accent-green); }
+    .ajax-flow__node--json     { background: rgba(255,107,53,0.12);  border: 1px solid rgba(255,107,53,0.3);  color: var(--accent-orange); }
+    .ajax-flow__arrow {
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 0 6px;
+    }
+    .ajax-flow__arrow-line {
+      width: 32px;
+      height: 2px;
+      background: var(--border);
+    }
+    .ajax-flow__arrow-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .ajax-flow__arrow-tip {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      margin-top: -4px;
+    }
+
+    /* Live demo mockup */
+    .demo-box {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin: 20px 0;
+    }
+    .demo-box__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border);
+    }
+    .demo-box__title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-blue);
+    }
+    .demo-box__badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(0,214,143,0.1);
+      border: 1px solid rgba(0,214,143,0.25);
+      color: var(--accent-green);
+    }
+    .demo-box__body {
+      padding: 20px;
+    }
+
+    /* product list mockup items */
+    .demo-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      transition: var(--transition);
+    }
+    .demo-item:last-child { margin-bottom: 0; }
+    .demo-item__img {
+      width: 44px; height: 44px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .demo-item__name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .demo-item__price {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--accent-green);
+    }
+    .demo-item__cat {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .demo-item__btn {
+      margin-left: auto;
+      padding: 5px 12px;
+      border-radius: 6px;
+      background: rgba(255,71,87,0.12);
+      border: 1px solid rgba(255,71,87,0.25);
+      color: var(--accent-red);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .demo-search {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .demo-input {
+      flex: 1;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      outline: none;
+    }
+    .demo-input:focus { border-color: var(--accent-blue); }
+    .demo-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+      color: white;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .demo-spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-top-color: var(--accent-red);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .demo-empty {
+      text-align: center;
+      padding: 24px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* method comparison cards */
+    .method-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+    @media (max-width: 700px) { .method-grid { grid-template-columns: 1fr; } }
+    .method-card {
+      padding: 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .method-card__title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .method-card__list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .method-card__list li {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      padding-left: 14px;
+      position: relative;
+    }
+    .method-card__list li::before { content: '·'; position: absolute; left: 4px; }
+
+    /* pagination demo */
+    .demo-pagination {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+    .demo-page-btn {
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .demo-page-btn.active {
+      background: rgba(255,71,87,0.15);
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    .demo-page-btn:hover:not(.active) {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" id="nav">
+    <a href="../index.html" class="nav__logo">
+      <span class="nav__logo-bracket">{</span>
+      <span class="nav__logo-text">LaravelMastery</span>
+      <span class="nav__logo-bracket">}</span>
+    </a>
+    <div class="nav__links">
+      <a href="chapter1.html">Setup</a>
+      <a href="chapter-folders.html">Folders</a>
+      <a href="chapter2.html">Database</a>
+      <a href="chapter3.html">Auth</a>
+      <a href="chapter-guest-auth.html">Guest/Auth</a>
+      <a href="chapter-ajax.html" style="color:var(--accent-red)">AJAX</a>
+      <a href="chapter4.html">E-Com</a>
+      <a href="chapter5.html">Deploy</a>
+    </div>
+    <a href="../index.html" class="nav__badge">
+      <span class="nav__badge-num">Ch.3.7</span> · AJAX
+    </a>
+  </nav>
+
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="chapter-page">
+
+    <div class="chapter-hero">
+      <p class="chapter-hero__num">// CHAPTER 3.7 — AJAX & LIVE DATA</p>
+      <h1 class="chapter-hero__title">Getting Data from<br>
+        <span style="background:linear-gradient(135deg,var(--accent-blue),var(--accent-green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Database without<br>Reloading</span>
+      </h1>
+      <p class="chapter-hero__desc">
+        Use Laravel routes + controllers to return JSON from the database,
+        then fetch it with JavaScript and display it in your Blade views —
+        live search, infinite scroll, dynamic filters, real-time cart updates,
+        and paginated data, all without a full page reload.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;">
+        <span class="badge badge--blue">Fetch API</span>
+        <span class="badge badge--green">JSON Response</span>
+        <span class="badge badge--red">Laravel Routes</span>
+        <span class="badge badge--yellow">Blade Injection</span>
+      </div>
+    </div>
+
+    <div class="chapter-layout">
+
+      <aside>
+        <div class="toc">
+          <p class="toc__title">// Contents</p>
+          <ul class="toc__list">
+            <li class="toc__item"><a href="#how-it-works">1. How AJAX Works in Laravel</a></li>
+            <li class="toc__item"><a href="#json-route">2. JSON Route & Controller</a></li>
+            <li class="toc__item"><a href="#fetch-basics">3. Fetch API Basics</a></li>
+            <li class="toc__item"><a href="#live-search">4. Live Search</a></li>
+            <li class="toc__item"><a href="#dynamic-filter">5. Dynamic Category Filter</a></li>
+            <li class="toc__item"><a href="#inject-blade">6. Injecting into Blade</a></li>
+            <li class="toc__item"><a href="#ajax-pagination">7. AJAX Pagination</a></li>
+            <li class="toc__item"><a href="#loading-states">8. Loading & Error States</a></li>
+            <li class="toc__item"><a href="#csrf">9. CSRF & POST via AJAX</a></li>
+            <li class="toc__item"><a href="#debounce">10. Debounce & Performance</a></li>
+          </ul>
+        </div>
+      </aside>
+
+      <main>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 1 — HOW IT WORKS                  -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="how-it-works">
+          <div class="step__num">1</div>
+          <div class="step__content">
+            <h2 class="step__title">How AJAX Works in Laravel</h2>
+            <p class="step__desc">
+              Instead of loading a whole new page, your JavaScript sends a silent HTTP request
+              to a Laravel route. The controller queries the database and returns JSON.
+              JavaScript receives the JSON and updates just the part of the page that changed.
+            </p>
+
+            <!-- FLOW DIAGRAM -->
+            <div class="ajax-flow">
+              <div class="ajax-flow__node ajax-flow__node--browser">🖥️<br>Browser<br><small>User types/clicks</small></div>
+              <div class="ajax-flow__arrow">
+                <div class="ajax-flow__arrow-line"></div>
+                <div class="ajax-flow__arrow-label">fetch()</div>
+                <div class="ajax-flow__arrow-tip">▸</div>
+              </div>
+              <div class="ajax-flow__node ajax-flow__node--js">⚡<br>JavaScript<br><small>Fetch API</small></div>
+              <div class="ajax-flow__arrow">
+                <div class="ajax-flow__arrow-line"></div>
+                <div class="ajax-flow__arrow-label">HTTP GET/POST</div>
+                <div class="ajax-flow__arrow-tip">▸</div>
+              </div>
+              <div class="ajax-flow__node ajax-flow__node--route">🔀<br>Laravel<br><small>routes/web.php</small></div>
+              <div class="ajax-flow__arrow">
+                <div class="ajax-flow__arrow-line"></div>
+                <div class="ajax-flow__arrow-label">calls</div>
+                <div class="ajax-flow__arrow-tip">▸</div>
+              </div>
+              <div class="ajax-flow__node ajax-flow__node--ctrl">🎮<br>Controller<br><small>queries DB</small></div>
+              <div class="ajax-flow__arrow">
+                <div class="ajax-flow__arrow-line"></div>
+                <div class="ajax-flow__arrow-label">Eloquent</div>
+                <div class="ajax-flow__arrow-tip">▸</div>
+              </div>
+              <div class="ajax-flow__node ajax-flow__node--db">🗄️<br>Database<br><small>MySQL/MariaDB</small></div>
+              <div class="ajax-flow__arrow">
+                <div class="ajax-flow__arrow-line"></div>
+                <div class="ajax-flow__arrow-label">response()->json()</div>
+                <div class="ajax-flow__arrow-tip">▸</div>
+              </div>
+              <div class="ajax-flow__node ajax-flow__node--json">📦<br>JSON<br><small>back to JS</small></div>
+            </div>
+
+            <div class="method-grid">
+              <div class="method-card">
+                <div class="method-card__title"><span>🔄</span> Traditional (Full Reload)</div>
+                <ul class="method-card__list">
+                  <li>User submits form or clicks link</li>
+                  <li>Browser loads a completely new page</li>
+                  <li>All CSS, JS, images reload</li>
+                  <li>User sees page flash/blank</li>
+                  <li>Slow — especially on mobile</li>
+                </ul>
+              </div>
+              <div class="method-card" style="border-color:rgba(78,205,196,0.2);background:rgba(78,205,196,0.04);">
+                <div class="method-card__title" style="color:var(--accent-blue)"><span>⚡</span> AJAX (No Reload)</div>
+                <ul class="method-card__list">
+                  <li>JS sends silent background request</li>
+                  <li>Only the data changes, page stays</li>
+                  <li>No CSS/JS/image reload</li>
+                  <li>Instant, smooth user experience</li>
+                  <li>Works for search, filters, cart, more</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 2 — JSON ROUTE & CONTROLLER       -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="json-route">
+          <div class="step__num">2</div>
+          <div class="step__content">
+            <h2 class="step__title">Create a JSON Route & Controller</h2>
+            <p class="step__desc">
+              Any route can return JSON instead of a view. Just swap <code>view()</code> for
+              <code>response()->json()</code>. The browser's Fetch API will receive it as a JavaScript object.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">routes/web.php — add JSON routes</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// ── AJAX / JSON routes ──────────────────────────────</span>
+<span class="cm">// These return JSON, not a view</span>
+
+<span class="cm">// Search products</span>
+Route::<span class="fn">get</span>(<span class="str">'/ajax/products'</span>, [<span class="cl">ProductController</span>::<span class="kw">class</span>, <span class="str">'ajaxIndex'</span>]);
+
+<span class="cm">// Get single product detail</span>
+Route::<span class="fn">get</span>(<span class="str">'/ajax/products/{product}'</span>, [<span class="cl">ProductController</span>::<span class="kw">class</span>, <span class="str">'ajaxShow'</span>]);
+
+<span class="cm">// Get products by category</span>
+Route::<span class="fn">get</span>(<span class="str">'/ajax/categories/{category}/products'</span>,
+    [<span class="cl">CategoryController</span>::<span class="kw">class</span>, <span class="str">'products'</span>]);
+
+<span class="cm">// Get cart count (auth users only)</span>
+Route::<span class="fn">get</span>(<span class="str">'/ajax/cart/count'</span>, [<span class="cl">CartController</span>::<span class="kw">class</span>, <span class="str">'count'</span>])
+    -><span class="fn">middleware</span>(<span class="str">'auth'</span>);</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/ProductController.php — ajaxIndex()</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">ajaxIndex</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="var">$query</span> = <span class="cl">Product</span>::<span class="fn">with</span>(<span class="str">'category'</span>)-><span class="fn">where</span>(<span class="str">'stock'</span>, <span class="str">'>'</span>, <span class="num">0</span>);
+
+    <span class="cm">// Search filter</span>
+    <span class="kw">if</span> (<span class="var">$request</span>-><span class="fn">filled</span>(<span class="str">'search'</span>)) {
+        <span class="var">$query</span>-><span class="fn">where</span>(<span class="str">'name'</span>, <span class="str">'like'</span>, <span class="str">'%'</span> . <span class="var">$request</span>->search . <span class="str">'%'</span>);
+    }
+
+    <span class="cm">// Category filter</span>
+    <span class="kw">if</span> (<span class="var">$request</span>-><span class="fn">filled</span>(<span class="str">'category_id'</span>)) {
+        <span class="var">$query</span>-><span class="fn">where</span>(<span class="str">'category_id'</span>, <span class="var">$request</span>->category_id);
+    }
+
+    <span class="cm">// Sort</span>
+    <span class="var">$sort</span> = <span class="var">$request</span>-><span class="fn">input</span>(<span class="str">'sort'</span>, <span class="str">'latest'</span>);
+    <span class="kw">match</span>(<span class="var">$sort</span>) {
+        <span class="str">'price_asc'</span>  => <span class="var">$query</span>-><span class="fn">orderBy</span>(<span class="str">'price'</span>, <span class="str">'asc'</span>),
+        <span class="str">'price_desc'</span> => <span class="var">$query</span>-><span class="fn">orderBy</span>(<span class="str">'price'</span>, <span class="str">'desc'</span>),
+        <span class="str">'name'</span>       => <span class="var">$query</span>-><span class="fn">orderBy</span>(<span class="str">'name'</span>),
+        <span class="kw">default</span>      => <span class="var">$query</span>-><span class="fn">latest</span>(),
+    };
+
+    <span class="var">$products</span> = <span class="var">$query</span>-><span class="fn">paginate</span>(<span class="num">12</span>);
+
+    <span class="cm">// Return JSON — JS will receive this as a plain object</span>
+    <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([
+        <span class="str">'data'</span>         => <span class="var">$products</span>-><span class="fn">items</span>(),       <span class="cm">// array of products</span>
+        <span class="str">'current_page'</span> => <span class="var">$products</span>->currentPage(),
+        <span class="str">'last_page'</span>    => <span class="var">$products</span>->lastPage(),
+        <span class="str">'total'</span>        => <span class="var">$products</span>->total(),
+    ]);
+}</pre>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">💡</div>
+              <div class="info-box__text">
+                <strong>Tip:</strong> Keep your AJAX routes alongside your normal routes in <code>routes/web.php</code>
+                — not in <code>routes/api.php</code>. This way they share the same session, auth guard,
+                and CSRF protection as your regular pages.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 3 — FETCH API BASICS              -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="fetch-basics">
+          <div class="step__num">3</div>
+          <div class="step__content">
+            <h2 class="step__title">Fetch API Basics</h2>
+            <p class="step__desc">
+              The browser's built-in <code>fetch()</code> function sends HTTP requests and
+              returns Promises. No jQuery or extra libraries needed.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/js/ajax.js — fetch() fundamentals</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// ── Basic GET request ────────────────────────────────</span>
+<span class="fn">fetch</span>(<span class="str">'/ajax/products'</span>)
+    .<span class="fn">then</span>(response => response.<span class="fn">json</span>())   <span class="cm">// parse JSON string → JS object</span>
+    .<span class="fn">then</span>(data => {
+        console.<span class="fn">log</span>(data);               <span class="cm">// { data: [...], total: 50, ... }</span>
+    });
+
+<span class="cm">// ── async/await version (cleaner) ────────────────────</span>
+<span class="kw">async function</span> <span class="fn">loadProducts</span>() {
+    <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/ajax/products'</span>);
+    <span class="kw">const</span> data     = <span class="kw">await</span> response.<span class="fn">json</span>();
+
+    console.<span class="fn">log</span>(data.data);        <span class="cm">// array of products</span>
+    console.<span class="fn">log</span>(data.total);       <span class="cm">// e.g. 50</span>
+    console.<span class="fn">log</span>(data.current_page); <span class="cm">// e.g. 1</span>
+}
+
+<span class="cm">// ── GET with query parameters ─────────────────────────</span>
+<span class="kw">const</span> params = <span class="kw">new</span> <span class="cl">URLSearchParams</span>({
+    search:      <span class="str">'laptop'</span>,
+    category_id: <span class="num">2</span>,
+    sort:        <span class="str">'price_asc'</span>,
+    page:        <span class="num">1</span>,
+});
+
+<span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/ajax/products?${params}`</span>);
+<span class="cm">// Calls: /ajax/products?search=laptop&category_id=2&sort=price_asc&page=1</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 4 — LIVE SEARCH                   -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="live-search">
+          <div class="step__num">4</div>
+          <div class="step__content">
+            <h2 class="step__title">Live Search — Type to Search Database</h2>
+            <p class="step__desc">
+              As the user types into a search box, fetch results from the DB and render
+              them instantly — no submit button, no page reload.
+            </p>
+
+            <!-- INTERACTIVE DEMO -->
+            <div class="demo-box">
+              <div class="demo-box__header">
+                <span class="demo-box__title">🔍 Live Search Demo</span>
+                <span class="demo-box__badge">⚡ Simulated AJAX</span>
+              </div>
+              <div class="demo-box__body">
+                <div class="demo-search">
+                  <input class="demo-input" id="demoSearch" type="text" placeholder="Type a product name... e.g. laptop, phone, shoes">
+                  <div class="demo-spinner" id="demoSpinner"></div>
+                </div>
+                <div id="demoResults">
+                  <div class="demo-empty">Start typing to search products...</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/views/products/index.blade.php — search input</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">{{-- Search input + results container --}}</span>
+<span class="tag-hl">&lt;input</span>
+    <span class="attr-hl">type</span>=<span class="str">"text"</span>
+    <span class="attr-hl">id</span>=<span class="str">"searchInput"</span>
+    <span class="attr-hl">placeholder</span>=<span class="str">"Search products..."</span>
+    <span class="attr-hl">autocomplete</span>=<span class="str">"off"</span>
+<span class="tag-hl">&gt;</span>
+
+<span class="cm">{{-- Loading spinner (hidden by default) --}}</span>
+<span class="tag-hl">&lt;div</span> <span class="attr-hl">id</span>=<span class="str">"spinner"</span> <span class="attr-hl">style</span>=<span class="str">"display:none"</span><span class="tag-hl">&gt;</span>Searching...<span class="tag-hl">&lt;/div&gt;</span>
+
+<span class="cm">{{-- This div gets filled by JavaScript --}}</span>
+<span class="tag-hl">&lt;div</span> <span class="attr-hl">id</span>=<span class="str">"productResults"</span><span class="tag-hl">&gt;</span>
+    <span class="cm">{{-- Initial products loaded by Blade (server-side) --}}</span>
+    @foreach($products as $product)
+        <span class="tag-hl">&lt;x-product-card</span> <span class="attr-hl">:product</span>=<span class="str">"$product"</span> <span class="tag-hl">/&gt;</span>
+    @endforeach
+<span class="tag-hl">&lt;/div&gt;</span></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/js/search.js — live search with debounce</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">const</span> searchInput  = document.<span class="fn">getElementById</span>(<span class="str">'searchInput'</span>);
+<span class="kw">const</span> resultsDiv   = document.<span class="fn">getElementById</span>(<span class="str">'productResults'</span>);
+<span class="kw">const</span> spinner      = document.<span class="fn">getElementById</span>(<span class="str">'spinner'</span>);
+<span class="kw">let</span>   debounceTimer;
+
+searchInput.<span class="fn">addEventListener</span>(<span class="str">'input'</span>, () => {
+    <span class="fn">clearTimeout</span>(debounceTimer);
+
+    <span class="cm">// Wait 350ms after user stops typing before fetching</span>
+    debounceTimer = <span class="fn">setTimeout</span>(<span class="kw">async</span> () => {
+        <span class="kw">const</span> query = searchInput.value.<span class="fn">trim</span>();
+
+        <span class="cm">// Show spinner</span>
+        spinner.style.display = <span class="str">'block'</span>;
+
+        <span class="kw">try</span> {
+            <span class="kw">const</span> params = <span class="kw">new</span> <span class="cl">URLSearchParams</span>({ search: query });
+            <span class="kw">const</span> res    = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/ajax/products?${params}`</span>);
+            <span class="kw">const</span> data   = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+            <span class="cm">// Render results into the DOM</span>
+            <span class="fn">renderProducts</span>(data.data, resultsDiv);
+
+        } <span class="kw">catch</span> (err) {
+            resultsDiv.innerHTML = <span class="str">`&lt;p class="error"&gt;Error: ${err.message}&lt;/p&gt;`</span>;
+        } <span class="kw">finally</span> {
+            spinner.style.display = <span class="str">'none'</span>;
+        }
+    }, <span class="num">350</span>);
+});
+
+<span class="cm">// Build HTML string from product data and inject it</span>
+<span class="kw">function</span> <span class="fn">renderProducts</span>(products, container) {
+    <span class="kw">if</span> (products.length === <span class="num">0</span>) {
+        container.innerHTML = <span class="str">'&lt;p&gt;No products found.&lt;/p&gt;'</span>;
+        <span class="kw">return</span>;
+    }
+
+    container.innerHTML = products.<span class="fn">map</span>(p => <span class="str">`
+        &lt;div class="product-card"&gt;
+            &lt;img src="/storage/${p.image}" alt="${p.name}"&gt;
+            &lt;h3&gt;${p.name}&lt;/h3&gt;
+            &lt;p class="price"&gt;₱ ${Number(p.price).toLocaleString()}&lt;/p&gt;
+            &lt;p class="category"&gt;${p.category?.name ?? ''}&lt;/p&gt;
+            &lt;button class="btn-add-cart" data-id="${p.id}"&gt;Add to Cart&lt;/button&gt;
+        &lt;/div&gt;
+    `</span>).<span class="fn">join</span>(<span class="str">''</span>);
+
+    <span class="cm">// Re-attach cart button event listeners</span>
+    <span class="fn">attachCartListeners</span>();
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 5 — DYNAMIC FILTER                -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="dynamic-filter">
+          <div class="step__num">5</div>
+          <div class="step__content">
+            <h2 class="step__title">Dynamic Category Filter</h2>
+            <p class="step__desc">
+              Clicking a category pill fetches only products from that category — no page reload,
+              URL updates with <code>history.pushState</code> so the back button still works.
+            </p>
+
+            <!-- INTERACTIVE DEMO -->
+            <div class="demo-box">
+              <div class="demo-box__header">
+                <span class="demo-box__title">🏷️ Category Filter Demo</span>
+                <span class="demo-box__badge">⚡ Simulated AJAX</span>
+              </div>
+              <div class="demo-box__body">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="demoCatBtns">
+                  <button class="demo-btn" style="background:rgba(255,71,87,0.15);border:1px solid rgba(255,71,87,0.3);color:var(--accent-red);" onclick="filterDemo('all')">All</button>
+                  <button class="demo-btn" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);" onclick="filterDemo('electronics')">Electronics</button>
+                  <button class="demo-btn" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);" onclick="filterDemo('clothing')">Clothing</button>
+                  <button class="demo-btn" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);" onclick="filterDemo('books')">Books</button>
+                </div>
+                <div id="demoCatResults">
+                  <div class="demo-item"><div class="demo-item__img">💻</div><div><div class="demo-item__name">MacBook Pro M3</div><div class="demo-item__price">₱89,999</div><div class="demo-item__cat">Electronics</div></div><button class="demo-item__btn">View →</button></div>
+                  <div class="demo-item"><div class="demo-item__img">👟</div><div><div class="demo-item__name">Nike Air Max 270</div><div class="demo-item__price">₱6,500</div><div class="demo-item__cat">Clothing</div></div><button class="demo-item__btn">View →</button></div>
+                  <div class="demo-item"><div class="demo-item__img">📱</div><div><div class="demo-item__name">iPhone 16 Pro</div><div class="demo-item__price">₱69,990</div><div class="demo-item__cat">Electronics</div></div><button class="demo-item__btn">View →</button></div>
+                  <div class="demo-item"><div class="demo-item__img">📚</div><div><div class="demo-item__name">Clean Code</div><div class="demo-item__price">₱1,200</div><div class="demo-item__cat">Books</div></div><button class="demo-item__btn">View →</button></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/js/filter.js — category filter</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">let</span> activeCategory = <span class="kw">null</span>;
+
+document.<span class="fn">querySelectorAll</span>(<span class="str">'.category-btn'</span>)
+    .<span class="fn">forEach</span>(btn => {
+        btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () => {
+            <span class="cm">// Update active state on buttons</span>
+            document.<span class="fn">querySelectorAll</span>(<span class="str">'.category-btn'</span>)
+                .<span class="fn">forEach</span>(b => b.<span class="fn">classList</span>.<span class="fn">remove</span>(<span class="str">'active'</span>));
+            btn.<span class="fn">classList</span>.<span class="fn">add</span>(<span class="str">'active'</span>);
+
+            activeCategory = btn.dataset.id || <span class="kw">null</span>;
+
+            <span class="cm">// Update the URL without reloading the page</span>
+            <span class="kw">const</span> url = activeCategory
+                ? <span class="str">`/products?category_id=${activeCategory}`</span>
+                : <span class="str">'/products'</span>;
+            <span class="fn">history</span>.<span class="fn">pushState</span>({}, <span class="str">''</span>, url);
+
+            <span class="cm">// Fetch filtered products</span>
+            <span class="fn">fetchProducts</span>({ category_id: activeCategory });
+        });
+    });
+
+<span class="kw">async function</span> <span class="fn">fetchProducts</span>(filters = {}) {
+    <span class="kw">const</span> grid = document.<span class="fn">getElementById</span>(<span class="str">'productGrid'</span>);
+    grid.style.opacity = <span class="str">'0.4'</span>; <span class="cm">// dim while loading</span>
+
+    <span class="kw">const</span> params = <span class="kw">new</span> <span class="cl">URLSearchParams</span>(
+        <span class="cl">Object</span>.<span class="fn">fromEntries</span>(
+            <span class="cl">Object</span>.<span class="fn">entries</span>(filters).<span class="fn">filter</span>(([k, v]) => v != <span class="kw">null</span>)
+        )
+    );
+
+    <span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/ajax/products?${params}`</span>);
+    <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+    <span class="fn">renderProducts</span>(data.data, grid);
+    grid.style.opacity = <span class="str">'1'</span>;
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 6 — INJECTING INTO BLADE          -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="inject-blade">
+          <div class="step__num">6</div>
+          <div class="step__content">
+            <h2 class="step__title">Injecting Data into Blade Templates</h2>
+            <p class="step__desc">
+              You have two strategies: build HTML in JavaScript, or ask Laravel to return
+              a pre-rendered Blade partial. The second approach is cleaner and keeps
+              your HTML in one place.
+            </p>
+
+            <div class="info-box info-box--info">
+              <div class="info-box__icon">📌</div>
+              <div class="info-box__text">
+                <strong>Strategy A — Build HTML in JS</strong> — fast, simple, all logic in one JS file. Good for small items like cards or list rows.<br><br>
+                <strong>Strategy B — Return rendered Blade HTML</strong> — controller renders a partial view and returns the HTML string. JavaScript just drops it into the page. Best for complex components.
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Strategy A — Build HTML directly in JavaScript</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Controller returns JSON array of products</span>
+<span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([<span class="str">'data'</span> => <span class="var">$products</span>]);
+
+<span class="cm">// JavaScript builds and injects the HTML</span>
+<span class="kw">function</span> <span class="fn">renderProducts</span>(products, container) {
+    container.innerHTML = products.<span class="fn">map</span>(p => <span class="str">`
+        &lt;div class="product-card" data-id="${p.id}"&gt;
+            &lt;img src="/storage/${p.image}" alt="${p.name}"
+                 onerror="this.src='/images/placeholder.jpg'"&gt;
+            &lt;div class="product-card__body"&gt;
+                &lt;span class="badge"&gt;${p.category.name}&lt;/span&gt;
+                &lt;h3&gt;${p.name}&lt;/h3&gt;
+                &lt;p class="price"&gt;₱ ${Number(p.price).toLocaleString('en-PH')}&lt;/p&gt;
+                &lt;p class="stock ${p.stock === 0 ? 'out' : ''}"&gt;
+                    ${p.stock > 0 ? p.stock + ' in stock' : 'Out of stock'}
+                &lt;/p&gt;
+            &lt;/div&gt;
+            &lt;button class="btn-add-cart" data-id="${p.id}"
+                ${p.stock === 0 ? 'disabled' : ''}&gt;
+                ${p.stock > 0 ? 'Add to Cart' : 'Sold Out'}
+            &lt;/button&gt;
+        &lt;/div&gt;
+    `</span>).<span class="fn">join</span>(<span class="str">''</span>);
+}</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Strategy B — Controller returns rendered Blade partial</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Controller renders the Blade partial and returns HTML string</span>
+<span class="kw">public function</span> <span class="fn">ajaxIndex</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="var">$products</span> = <span class="cl">Product</span>::<span class="fn">with</span>(<span class="str">'category'</span>)-><span class="fn">paginate</span>(<span class="num">12</span>);
+
+    <span class="cm">// If AJAX request, return rendered HTML partial</span>
+    <span class="kw">if</span> (<span class="var">$request</span>-><span class="fn">ajax</span>() || <span class="var">$request</span>-><span class="fn">wantsJson</span>()) {
+        <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([
+            <span class="str">'html'</span>      => <span class="fn">view</span>(<span class="str">'partials.product-grid'</span>,
+                              <span class="fn">compact</span>(<span class="str">'products'</span>))-><span class="fn">render</span>(),
+            <span class="str">'total'</span>     => <span class="var">$products</span>->total(),
+            <span class="str">'last_page'</span> => <span class="var">$products</span>->lastPage(),
+        ]);
+    }
+
+    <span class="cm">// Normal browser request — return full page view</span>
+    <span class="kw">return</span> <span class="fn">view</span>(<span class="str">'products.index'</span>, <span class="fn">compact</span>(<span class="str">'products'</span>));
+}
+
+<span class="cm">// resources/views/partials/product-grid.blade.php</span>
+<span class="cm">// Just the grid HTML, no layout wrapper</span></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">JavaScript — drop rendered HTML into the page</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/ajax/products'</span>, {
+    headers: { <span class="str">'X-Requested-With'</span>: <span class="str">'XMLHttpRequest'</span> }
+    <span class="cm">// This header makes $request->ajax() return true</span>
+});
+<span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+<span class="cm">// Drop pre-rendered Blade HTML straight into the DOM</span>
+document.<span class="fn">getElementById</span>(<span class="str">'productGrid'</span>).innerHTML = data.html;
+
+<span class="cm">// Re-attach any event listeners after DOM update</span>
+<span class="fn">attachCartListeners</span>();</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 7 — AJAX PAGINATION               -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="ajax-pagination">
+          <div class="step__num">7</div>
+          <div class="step__content">
+            <h2 class="step__title">AJAX Pagination</h2>
+            <p class="step__desc">
+              Replace Laravel's default pagination links with AJAX page switching —
+              clicking a page number fetches and renders that page without reload.
+            </p>
+
+            <!-- PAGINATION DEMO -->
+            <div class="demo-box">
+              <div class="demo-box__header">
+                <span class="demo-box__title">📄 AJAX Pagination Demo</span>
+                <span class="demo-box__badge">⚡ Simulated</span>
+              </div>
+              <div class="demo-box__body">
+                <div id="demoPagItems">
+                  <div class="demo-item"><div class="demo-item__img">💻</div><div><div class="demo-item__name">MacBook Pro M3</div><div class="demo-item__price">₱89,999</div></div></div>
+                  <div class="demo-item"><div class="demo-item__img">📱</div><div><div class="demo-item__name">iPhone 16 Pro</div><div class="demo-item__price">₱69,990</div></div></div>
+                  <div class="demo-item"><div class="demo-item__img">⌚</div><div><div class="demo-item__name">Apple Watch Ultra</div><div class="demo-item__price">₱45,000</div></div></div>
+                </div>
+                <div class="demo-pagination">
+                  <button class="demo-page-btn active" onclick="demoPage(this,1)">1</button>
+                  <button class="demo-page-btn" onclick="demoPage(this,2)">2</button>
+                  <button class="demo-page-btn" onclick="demoPage(this,3)">3</button>
+                  <button class="demo-page-btn" onclick="demoPage(this,4)">4</button>
+                  <button class="demo-page-btn" onclick="demoPage(this,5)">→</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/js/pagination.js — AJAX pagination</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">let</span> currentPage     = <span class="num">1</span>;
+<span class="kw">let</span> currentFilters  = {};
+
+<span class="cm">// Intercept pagination link clicks</span>
+document.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="kw">async</span> e => {
+    <span class="kw">const</span> pageBtn = e.target.<span class="fn">closest</span>(<span class="str">'[data-page]'</span>);
+    <span class="kw">if</span> (!pageBtn) <span class="kw">return</span>;
+
+    e.<span class="fn">preventDefault</span>();
+    <span class="kw">const</span> page = parseInt(pageBtn.dataset.page);
+    <span class="kw">if</span> (page === currentPage) <span class="kw">return</span>;
+
+    currentPage = page;
+    <span class="kw">await</span> <span class="fn">fetchPage</span>(page);
+});
+
+<span class="kw">async function</span> <span class="fn">fetchPage</span>(page) {
+    <span class="kw">const</span> grid = document.<span class="fn">getElementById</span>(<span class="str">'productGrid'</span>);
+
+    <span class="cm">// Fade the grid while loading</span>
+    grid.<span class="fn">style</span>.opacity = <span class="str">'0.3'</span>;
+    grid.<span class="fn">style</span>.pointerEvents = <span class="str">'none'</span>;
+
+    <span class="kw">const</span> params = <span class="kw">new</span> <span class="cl">URLSearchParams</span>({
+        ...currentFilters,
+        page,
+    });
+
+    <span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/ajax/products?${params}`</span>);
+    <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+    <span class="cm">// Render products</span>
+    <span class="fn">renderProducts</span>(data.data, grid);
+
+    <span class="cm">// Rebuild pagination controls</span>
+    <span class="fn">renderPagination</span>(data.current_page, data.last_page);
+
+    <span class="cm">// Restore grid</span>
+    grid.<span class="fn">style</span>.opacity = <span class="str">'1'</span>;
+    grid.<span class="fn">style</span>.pointerEvents = <span class="str">'auto'</span>;
+
+    <span class="cm">// Scroll to top of grid</span>
+    grid.<span class="fn">scrollIntoView</span>({ behavior: <span class="str">'smooth'</span>, block: <span class="str">'start'</span> });
+
+    <span class="cm">// Update URL</span>
+    <span class="fn">history</span>.<span class="fn">pushState</span>({}, <span class="str">''</span>, <span class="str">`/products?page=${page}`</span>);
+}
+
+<span class="kw">function</span> <span class="fn">renderPagination</span>(current, last) {
+    <span class="kw">const</span> pag = document.<span class="fn">getElementById</span>(<span class="str">'pagination'</span>);
+    <span class="kw">let</span> html = <span class="str">''</span>;
+    <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i <= last; i++) {
+        html += <span class="str">`&lt;button data-page="${i}"
+            class="page-btn ${i === current ? 'active' : ''}"&gt;
+            ${i}
+        &lt;/button&gt;`</span>;
+    }
+    pag.innerHTML = html;
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 8 — LOADING & ERROR STATES        -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="loading-states">
+          <div class="step__num">8</div>
+          <div class="step__content">
+            <h2 class="step__title">Loading & Error States</h2>
+            <p class="step__desc">
+              Always show the user what's happening. Show a spinner while fetching,
+              handle network errors gracefully, and show empty states when no results come back.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/js/ui-states.js — complete state handling</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">const</span> grid    = document.<span class="fn">getElementById</span>(<span class="str">'productGrid'</span>);
+<span class="kw">const</span> spinner = document.<span class="fn">getElementById</span>(<span class="str">'spinner'</span>);
+
+<span class="kw">function</span> <span class="fn">showLoading</span>() {
+    spinner.style.display = <span class="str">'flex'</span>;
+    grid.style.opacity    = <span class="str">'0.3'</span>;
+    grid.style.pointerEvents = <span class="str">'none'</span>;
+}
+
+<span class="kw">function</span> <span class="fn">hideLoading</span>() {
+    spinner.style.display = <span class="str">'none'</span>;
+    grid.style.opacity    = <span class="str">'1'</span>;
+    grid.style.pointerEvents = <span class="str">'auto'</span>;
+}
+
+<span class="kw">function</span> <span class="fn">showEmpty</span>(message = <span class="str">'No products found.'</span>) {
+    grid.innerHTML = <span class="str">`
+        &lt;div class="empty-state"&gt;
+            &lt;span&gt;🔍&lt;/span&gt;
+            &lt;p&gt;${message}&lt;/p&gt;
+        &lt;/div&gt;
+    `</span>;
+}
+
+<span class="kw">function</span> <span class="fn">showError</span>(err) {
+    grid.innerHTML = <span class="str">`
+        &lt;div class="error-state"&gt;
+            &lt;span&gt;⚠️&lt;/span&gt;
+            &lt;p&gt;Something went wrong: ${err.message}&lt;/p&gt;
+            &lt;button onclick="location.reload()"&gt;Retry&lt;/button&gt;
+        &lt;/div&gt;
+    `</span>;
+}
+
+<span class="kw">async function</span> <span class="fn">fetchProducts</span>(params = {}) {
+    <span class="fn">showLoading</span>();
+    <span class="kw">try</span> {
+        <span class="kw">const</span> qs  = <span class="kw">new</span> <span class="cl">URLSearchParams</span>(params);
+        <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/ajax/products?${qs}`</span>);
+
+        <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="cl">Error</span>(<span class="str">`Server error: ${res.status}`</span>);
+
+        <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+        <span class="kw">if</span> (data.data.length === <span class="num">0</span>) {
+            <span class="fn">showEmpty</span>(<span class="str">'No products match your search.'</span>);
+        } <span class="kw">else</span> {
+            <span class="fn">renderProducts</span>(data.data, grid);
+            <span class="fn">renderPagination</span>(data.current_page, data.last_page);
+        }
+    } <span class="kw">catch</span> (err) {
+        <span class="fn">showError</span>(err);
+    } <span class="kw">finally</span> {
+        <span class="fn">hideLoading</span>();
+    }
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 9 — CSRF & POST VIA AJAX          -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="csrf">
+          <div class="step__num">9</div>
+          <div class="step__content">
+            <h2 class="step__title">CSRF & POST Requests via AJAX</h2>
+            <p class="step__desc">
+              Laravel requires a CSRF token for all POST, PUT, PATCH, DELETE requests.
+              For AJAX you send it in the header — never skip this or you'll get a 419 error.
+            </p>
+
+            <div class="info-box info-box--error">
+              <div class="info-box__icon">🚨</div>
+              <div class="info-box__text">
+                <strong>419 Page Expired</strong> — this error means your AJAX POST is missing
+                the CSRF token. Make sure you have <code>&lt;meta name="csrf-token" content="{{ csrf_token() }}"&gt;</code>
+                in your layout's <code>&lt;head&gt;</code> and send it in every POST request header.
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/views/layouts/app.blade.php — required meta tag</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="tag-hl">&lt;head&gt;</span>
+    <span class="tag-hl">&lt;meta</span> <span class="attr-hl">charset</span>=<span class="str">"UTF-8"</span><span class="tag-hl">&gt;</span>
+    <span class="cm">&lt;!-- Required for ALL AJAX POST requests --&gt;</span>
+    <span class="tag-hl">&lt;meta</span> <span class="attr-hl">name</span>=<span class="str">"csrf-token"</span> <span class="attr-hl">content</span>=<span class="str">"{{ csrf_token() }}"</span><span class="tag-hl">&gt;</span>
+<span class="tag-hl">&lt;/head&gt;</span></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/js/http.js — reusable fetch helper with CSRF</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// Get the CSRF token from the meta tag once</span>
+<span class="kw">const</span> CSRF = document
+    .<span class="fn">querySelector</span>(<span class="str">'meta[name="csrf-token"]'</span>)
+    ?.content || <span class="str">''</span>;
+
+<span class="cm">// Reusable POST helper — use this everywhere instead of raw fetch()</span>
+<span class="kw">async function</span> <span class="fn">post</span>(url, body = {}) {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(url, {
+        method:  <span class="str">'POST'</span>,
+        headers: {
+            <span class="str">'Content-Type'</span>:     <span class="str">'application/json'</span>,
+            <span class="str">'Accept'</span>:           <span class="str">'application/json'</span>,
+            <span class="str">'X-CSRF-TOKEN'</span>:     CSRF,
+            <span class="str">'X-Requested-With'</span>: <span class="str">'XMLHttpRequest'</span>,
+        },
+        body: <span class="cl">JSON</span>.<span class="fn">stringify</span>(body),
+    });
+    <span class="kw">if</span> (res.status === <span class="num">401</span>) { window.location.href = <span class="str">'/login'</span>; <span class="kw">return</span>; }
+    <span class="kw">if</span> (res.status === <span class="num">403</span>) { <span class="kw">throw new</span> <span class="cl">Error</span>(<span class="str">'Forbidden'</span>); }
+    <span class="kw">if</span> (res.status === <span class="num">419</span>) { <span class="kw">throw new</span> <span class="cl">Error</span>(<span class="str">'CSRF token expired — reload page'</span>); }
+    <span class="kw">if</span> (!res.ok)              { <span class="kw">throw new</span> <span class="cl">Error</span>(<span class="str">`Error ${res.status}`</span>); }
+    <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+
+<span class="cm">// Usage — add to cart:</span>
+<span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">post</span>(<span class="str">`/cart/add/${productId}`</span>, { quantity: <span class="num">1</span> });
+document.<span class="fn">getElementById</span>(<span class="str">'cart-badge'</span>).textContent = data.cartCount;
+
+<span class="cm">// Usage — save wishlist item:</span>
+<span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">post</span>(<span class="str">'/wishlist/toggle'</span>, { product_id: <span class="num">5</span> });
+<span class="fn">updateWishlistBtn</span>(data.wishlisted);</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════ -->
+        <!-- STEP 10 — DEBOUNCE & PERFORMANCE       -->
+        <!-- ══════════════════════════════════════ -->
+        <div class="step" id="debounce">
+          <div class="step__num">10</div>
+          <div class="step__content">
+            <h2 class="step__title">Debounce &amp; Performance Tips</h2>
+            <p class="step__desc">
+              Without debouncing, every keystroke fires a database query. Debouncing delays
+              the request until the user pauses typing — dramatically reducing server load.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">resources/js/utils.js — reusable debounce + abort controller</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// ── Debounce function ────────────────────────────────</span>
+<span class="kw">function</span> <span class="fn">debounce</span>(fn, delay = <span class="num">350</span>) {
+    <span class="kw">let</span> timer;
+    <span class="kw">return</span> (...args) => {
+        <span class="fn">clearTimeout</span>(timer);
+        timer = <span class="fn">setTimeout</span>(() => <span class="fn">fn</span>(...args), delay);
+    };
+}
+
+<span class="cm">// ── AbortController — cancel in-flight requests ──────</span>
+<span class="cm">// If user types fast, cancel the previous fetch before</span>
+<span class="cm">// the new one fires so old results don't override new ones</span>
+<span class="kw">let</span> abortController;
+
+<span class="kw">async function</span> <span class="fn">searchProducts</span>(query) {
+    <span class="cm">// Cancel any pending request</span>
+    <span class="kw">if</span> (abortController) abortController.<span class="fn">abort</span>();
+    abortController = <span class="kw">new</span> <span class="cl">AbortController</span>();
+
+    <span class="kw">try</span> {
+        <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/ajax/products?search=${query}`</span>, {
+            signal: abortController.signal  <span class="cm">// tied to the controller</span>
+        });
+        <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+        <span class="fn">renderProducts</span>(data.data);
+    } <span class="kw">catch</span> (err) {
+        <span class="kw">if</span> (err.name === <span class="str">'AbortError'</span>) <span class="kw">return</span>; <span class="cm">// expected — ignore</span>
+        <span class="fn">showError</span>(err);
+    }
+}
+
+<span class="cm">// Attach with 350ms debounce</span>
+<span class="kw">const</span> debouncedSearch = <span class="fn">debounce</span>(searchProducts, <span class="num">350</span>);
+searchInput.<span class="fn">addEventListener</span>(<span class="str">'input'</span>, e => <span class="fn">debouncedSearch</span>(e.target.value));</pre>
+            </div>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">⚡</div>
+              <div class="info-box__text">
+                <strong>Performance checklist for AJAX routes:</strong><br>
+                ✅ Use <code>select('id','name','price','image')</code> — only fetch columns you need<br>
+                ✅ Add database indexes on columns you filter/search (e.g. <code>name</code>, <code>category_id</code>)<br>
+                ✅ Use <code>paginate(12)</code> — never <code>all()</code> on large tables<br>
+                ✅ Cache category lists with <code>Cache::remember()</code> — they rarely change<br>
+                ✅ Use debounce (300–400ms) on all search inputs
+              </div>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Controller optimization — only fetch what you need</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">public function</span> <span class="fn">ajaxIndex</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+{
+    <span class="var">$products</span> = <span class="cl">Product</span>::<span class="fn">with</span>([<span class="str">'category:id,name'</span>])  <span class="cm">// only id+name from category</span>
+        -><span class="fn">select</span>(<span class="str">'id'</span>, <span class="str">'name'</span>, <span class="str">'price'</span>, <span class="str">'stock'</span>, <span class="str">'image'</span>, <span class="str">'category_id'</span>)
+        -><span class="fn">where</span>(<span class="str">'stock'</span>, <span class="str">'>'</span>, <span class="num">0</span>)
+        -><span class="fn">when</span>(<span class="var">$request</span>->search, <span class="kw">fn</span>(<span class="var">$q</span>, <span class="var">$s</span>) =>
+            <span class="var">$q</span>-><span class="fn">where</span>(<span class="str">'name'</span>, <span class="str">'like'</span>, <span class="str">"%{$s}%"</span>)
+        )
+        -><span class="fn">when</span>(<span class="var">$request</span>->category_id, <span class="kw">fn</span>(<span class="var">$q</span>, <span class="var">$c</span>) =>
+            <span class="var">$q</span>-><span class="fn">where</span>(<span class="str">'category_id'</span>, <span class="var">$c</span>)
+        )
+        -><span class="fn">paginate</span>(<span class="num">12</span>);
+
+    <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>(<span class="var">$products</span>);
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHAPTER NAV -->
+        <div class="chapter-nav">
+          <a href="chapter-guest-auth.html" class="chapter-nav__link">
+            <span class="chapter-nav__label">← Previous</span>
+            <span class="chapter-nav__title">Guest vs Auth Users</span>
+          </a>
+          <a href="chapter4.html" class="chapter-nav__link chapter-nav__link--next">
+            <span class="chapter-nav__label">Next →</span>
+            <span class="chapter-nav__title">E-Commerce App</span>
+          </a>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="site-footer__top">
+
+      <div class="site-footer__brand">
+        <a href="../index.html" class="site-footer__logo">
+          <span class="site-footer__logo-bracket">{</span>
+          <span>LaravelMastery</span>
+          <span class="site-footer__logo-bracket">}</span>
+        </a>
+        <p class="site-footer__tagline">
+          A complete Laravel tutorial series covering setup, database, authentication,
+          AJAX, e-commerce, and deployment — built for Filipino developers.
+        </p>
+        <div class="site-footer__creator">
+          <div class="site-footer__creator-avatar">👨&#x200D;💻</div>
+          <div class="site-footer__creator-info">
+            <div class="site-footer__creator-label">Created by</div>
+            <div class="site-footer__creator-name">Ceron Matthew Calsena</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="site-footer__col-title">// Chapters</p>
+        <ul class="site-footer__links">
+          <li><a href="chapter1.html"><span class="link-arrow">▸</span> Ch.01 · Setup &amp; Laragon</a></li>
+          <li><a href="chapter-folders.html"><span class="link-arrow">▸</span> Folders · Project Structure</a></li>
+          <li><a href="chapter2.html"><span class="link-arrow">▸</span> Ch.02 · Database &amp; Models</a></li>
+          <li><a href="chapter3.html"><span class="link-arrow">▸</span> Ch.03 · Auth &amp; Login</a></li>
+          <li><a href="chapter-guest-auth.html"><span class="link-arrow">▸</span> Ch.3.5 · Guest vs Auth</a></li>
+          <li><a href="chapter-ajax.html"><span class="link-arrow">▸</span> Ch.3.7 · AJAX &amp; Live Data</a></li>
+          <li><a href="chapter4.html"><span class="link-arrow">▸</span> Ch.04 · E-Commerce App</a></li>
+          <li><a href="chapter5.html"><span class="link-arrow">▸</span> Ch.05 · Deploy to Public</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="site-footer__col-title">// Stack</p>
+        <ul class="site-footer__links">
+          <li><a href="chapter1.html"><span class="link-arrow">▸</span> Laravel 8 &amp; 12</a></li>
+          <li><a href="chapter1.html"><span class="link-arrow">▸</span> Laragon Local Dev</a></li>
+          <li><a href="chapter2.html"><span class="link-arrow">▸</span> MySQL &amp; MariaDB</a></li>
+          <li><a href="chapter2.html"><span class="link-arrow">▸</span> Eloquent ORM</a></li>
+          <li><a href="chapter3.html"><span class="link-arrow">▸</span> Laravel Breeze Auth</a></li>
+          <li><a href="chapter-ajax.html"><span class="link-arrow">▸</span> AJAX / Fetch API</a></li>
+          <li><a href="chapter5.html"><span class="link-arrow">▸</span> ngrok &amp; VPS Deploy</a></li>
+        </ul>
+      </div>
+
+    </div>
+    <div class="site-footer__bottom">
+      <p class="site-footer__copy">
+        &copy; 2025 <strong>LaravelMastery</strong> &nbsp;&middot;&nbsp; Created by <strong>Ceron Matthew Calsena</strong> &nbsp;&middot;&nbsp; Made with ❤️ for the PHP community
+      </p>
+      <div class="site-footer__stack">
+        <span class="site-footer__stack-label">Built with:</span>
+        <div class="site-footer__stack-tags">
+          <span class="site-footer__stack-tag">HTML</span>
+          <span class="site-footer__stack-tag">CSS</span>
+          <span class="site-footer__stack-tag">Vanilla JS</span>
+          <span class="site-footer__stack-tag">No Framework</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../js/canvas.js"></script>
+  <script src="../js/scroll.js"></script>
+  <script src="../js/nav.js"></script>
+  <script>
+    // ── Live Search Demo ─────────────────────────────────────
+    var demoProducts = [
+      { icon:'💻', name:'MacBook Pro M3',    price:'₱89,999', cat:'Electronics' },
+      { icon:'📱', name:'iPhone 16 Pro',     price:'₱69,990', cat:'Electronics' },
+      { icon:'👟', name:'Nike Air Max 270',  price:'₱6,500',  cat:'Clothing' },
+      { icon:'👕', name:'Polo Shirt Classic',price:'₱1,200',  cat:'Clothing' },
+      { icon:'📚', name:'Clean Code Book',   price:'₱1,400',  cat:'Books' },
+      { icon:'📖', name:'Laravel Up & Running',price:'₱1,800',cat:'Books' },
+      { icon:'⌚', name:'Apple Watch Ultra', price:'₱45,000', cat:'Electronics' },
+      { icon:'🎧', name:'Sony WH-1000XM5',  price:'₱18,000', cat:'Electronics' },
+      { icon:'👔', name:'Barong Tagalog',    price:'₱3,500',  cat:'Clothing' },
+      { icon:'💾', name:'Samsung SSD 2TB',   price:'₱5,800',  cat:'Electronics' },
+    ];
+
+    var searchInput  = document.getElementById('demoSearch');
+    var resultsDiv   = document.getElementById('demoResults');
+    var demoSpinner  = document.getElementById('demoSpinner');
+    var searchTimer;
+
+    function renderDemoResults(items) {
+      if (items.length === 0) {
+        resultsDiv.innerHTML = '<div class="demo-empty">No products found.</div>';
+        return;
+      }
+      resultsDiv.innerHTML = items.map(function(p) {
+        return '<div class="demo-item">' +
+          '<div class="demo-item__img">' + p.icon + '</div>' +
+          '<div>' +
+            '<div class="demo-item__name">' + p.name + '</div>' +
+            '<div class="demo-item__price">' + p.price + '</div>' +
+            '<div class="demo-item__cat">' + p.cat + '</div>' +
+          '</div>' +
+          '<button class="demo-item__btn">View →</button>' +
+        '</div>';
+      }).join('');
+    }
+
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimer);
+      demoSpinner.style.display = 'block';
+      var q = searchInput.value.toLowerCase().trim();
+
+      searchTimer = setTimeout(function() {
+        demoSpinner.style.display = 'none';
+        if (!q) {
+          resultsDiv.innerHTML = '<div class="demo-empty">Start typing to search products...</div>';
+          return;
+        }
+        var found = demoProducts.filter(function(p) {
+          return p.name.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q);
+        });
+        renderDemoResults(found);
+      }, 350);
+    });
+
+    // ── Category Filter Demo ─────────────────────────────────
+    var allDemoItems = [
+      { icon:'💻', name:'MacBook Pro M3',    price:'₱89,999', cat:'electronics' },
+      { icon:'👟', name:'Nike Air Max 270',  price:'₱6,500',  cat:'clothing' },
+      { icon:'📱', name:'iPhone 16 Pro',     price:'₱69,990', cat:'electronics' },
+      { icon:'📚', name:'Clean Code',        price:'₱1,400',  cat:'books' },
+    ];
+
+    function filterDemo(cat) {
+      var btns = document.querySelectorAll('#demoCatBtns button');
+      btns.forEach(function(b) {
+        b.style.background = 'transparent';
+        b.style.borderColor = 'rgba(255,255,255,0.07)';
+        b.style.color = 'var(--text-secondary)';
+      });
+      event.target.style.background = 'rgba(255,71,87,0.15)';
+      event.target.style.borderColor = 'rgba(255,71,87,0.3)';
+      event.target.style.color = 'var(--accent-red)';
+
+      var container = document.getElementById('demoCatResults');
+      container.style.opacity = '0.3';
+
+      setTimeout(function() {
+        var items = cat === 'all'
+          ? allDemoItems
+          : allDemoItems.filter(function(i) { return i.cat === cat; });
+
+        if (items.length === 0) {
+          container.innerHTML = '<div class="demo-empty">No products in this category.</div>';
+        } else {
+          container.innerHTML = items.map(function(p) {
+            return '<div class="demo-item">' +
+              '<div class="demo-item__img">' + p.icon + '</div>' +
+              '<div>' +
+                '<div class="demo-item__name">' + p.name + '</div>' +
+                '<div class="demo-item__price">' + p.price + '</div>' +
+              '</div>' +
+              '<button class="demo-item__btn">View →</button>' +
+            '</div>';
+          }).join('');
+        }
+        container.style.opacity = '1';
+      }, 200);
+    }
+
+    // ── Pagination Demo ──────────────────────────────────────
+    var pages = {
+      1: [{icon:'💻',name:'MacBook Pro M3',price:'₱89,999'},{icon:'📱',name:'iPhone 16 Pro',price:'₱69,990'},{icon:'⌚',name:'Apple Watch',price:'₱45,000'}],
+      2: [{icon:'👟',name:'Nike Air Max',price:'₱6,500'},{icon:'👕',name:'Polo Shirt',price:'₱1,200'},{icon:'👔',name:'Barong Tagalog',price:'₱3,500'}],
+      3: [{icon:'📚',name:'Clean Code',price:'₱1,400'},{icon:'📖',name:'Laravel Book',price:'₱1,800'},{icon:'📕',name:'JavaScript Book',price:'₱1,600'}],
+      4: [{icon:'🎧',name:'Sony WH-1000XM5',price:'₱18,000'},{icon:'💾',name:'Samsung SSD',price:'₱5,800'},{icon:'🖱️',name:'Logitech MX Master',price:'₱7,200'}],
+      5: [{icon:'🖥️',name:'LG 27" Monitor',price:'₱22,000'},{icon:'⌨️',name:'Keychron K2',price:'₱5,500'},{icon:'📷',name:'Sony ZV-E10',price:'₱38,000'}],
+    };
+
+    function demoPage(btn, page) {
+      document.querySelectorAll('.demo-page-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+
+      var container = document.getElementById('demoPagItems');
+      container.style.opacity = '0.3';
+      setTimeout(function() {
+        var items = pages[page] || pages[1];
+        container.innerHTML = items.map(function(p) {
+          return '<div class="demo-item">' +
+            '<div class="demo-item__img">' + p.icon + '</div>' +
+            '<div><div class="demo-item__name">' + p.name + '</div>' +
+            '<div class="demo-item__price">' + p.price + '</div></div>' +
+            '</div>';
+        }).join('');
+        container.style.opacity = '1';
+      }, 180);
+    }
+  </script>
+</body>
+</html>

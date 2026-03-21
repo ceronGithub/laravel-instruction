@@ -46,6 +46,8 @@
         <span class="badge badge--green">MariaDB</span>
         <span class="badge badge--red">Eloquent</span>
         <span class="badge badge--yellow">Migrations</span>
+        <span class="badge badge--blue">Supabase</span>
+        <span class="badge badge--yellow">Firebase</span>
       </div>
     </div>
 
@@ -61,6 +63,8 @@
             <li class="toc__item"><a href="#relationships">5. Relationships</a></li>
             <li class="toc__item"><a href="#seeding">6. Seeding</a></li>
             <li class="toc__item"><a href="#queries">7. Eloquent Queries</a></li>
+            <li class="toc__item"><a href="#supabase">8. Connect to Supabase</a></li>
+            <li class="toc__item"><a href="#firebase">9. Connect to Firebase</a></li>
           </ul>
         </div>
       </aside>
@@ -406,6 +410,502 @@
 <span class="var">$total</span> = <span class="cl">Product</span>::<span class="fn">sum</span>(<span class="str">'price'</span>);
 <span class="var">$count</span> = <span class="cl">Product</span>::<span class="fn">where</span>(<span class="str">'stock'</span>, <span class="str">'>'</span>, <span class="num">0</span>)-><span class="fn">count</span>();</pre>
             </div>
+          </div>
+        </div>
+
+        <!-- STEP 8 — SUPABASE -->
+        <div class="step reveal" id="supabase">
+          <div class="step__num">8</div>
+          <div class="step__content">
+            <h2 class="step__title">Connect Laravel to Supabase</h2>
+            <p class="step__desc">
+              Supabase is an open-source Firebase alternative that gives you a hosted PostgreSQL database,
+              REST API, Auth, and Storage. Laravel connects to it just like any PostgreSQL database —
+              no special package needed.
+            </p>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">💡</div>
+              <div class="info-box__text">
+                <strong>What you need:</strong> A free Supabase account at
+                <code>supabase.com</code>. The free tier gives you a full PostgreSQL database,
+                500MB storage, and 2GB bandwidth — more than enough to build and test your Laravel app.
+              </div>
+            </div>
+
+            <h3 style="color:var(--accent-green);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 1 — Create a Supabase Project</h3>
+            <ol style="color:var(--text-muted);line-height:2;padding-left:20px;">
+              <li>Go to <code>supabase.com</code> → click <strong>Start your project</strong> → sign in with GitHub.</li>
+              <li>Click <strong>New project</strong> → give it a name (e.g. <code>laravel-shop</code>).</li>
+              <li>Set a strong <strong>Database Password</strong> — save it somewhere safe, you'll need it.</li>
+              <li>Choose a region closest to you (e.g. <em>Southeast Asia</em>).</li>
+              <li>Click <strong>Create new project</strong> — wait ~2 minutes for provisioning.</li>
+            </ol>
+
+            <h3 style="color:var(--accent-green);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 2 — Get Your Connection Credentials</h3>
+            <p style="color:var(--text-muted);margin-bottom:12px;">
+              In your Supabase dashboard: go to <strong>Project Settings → Database</strong>.
+              Scroll down to <strong>Connection string</strong> and select the <strong>PHP / Laravel</strong> tab.
+              You'll see values like these:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">Supabase Dashboard — Database Settings</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Found under: Project Settings → Database → Connection string</span>
+Host:      <span class="str">db.xxxxxxxxxxxx.supabase.co</span>
+Port:      <span class="str">5432</span>
+Database:  <span class="str">postgres</span>
+Username:  <span class="str">postgres</span>
+Password:  <span class="str">your-database-password</span></pre>
+            </div>
+
+            <h3 style="color:var(--accent-green);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 3 — Install the PostgreSQL PDO Driver</h3>
+            <p style="color:var(--text-muted);margin-bottom:12px;">
+              Supabase uses PostgreSQL. Laragon's PHP already includes the PDO driver for pgsql,
+              but verify it's enabled in <code>C:\laragon\bin\php\php8.x\php.ini</code>:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">php.ini — enable pgsql (uncomment these lines)</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">; Remove the semicolon from both lines:</span>
+extension=pdo_pgsql
+extension=pgsql</pre>
+            </div>
+
+            <div class="info-box info-box--tip" style="margin-top:12px;">
+              <div class="info-box__icon">🔁</div>
+              <div class="info-box__text">
+                After editing <code>php.ini</code>, restart Laragon: click <strong>Stop All</strong> then <strong>Start All</strong>.
+                Verify with: <code>php -m | findstr pgsql</code> in Laragon's terminal.
+              </div>
+            </div>
+
+            <h3 style="color:var(--accent-green);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 4 — Configure .env for Supabase</h3>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">.env</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Change the DB_* block to point to Supabase:</span>
+<span class="var">DB_CONNECTION</span>=<span class="str">pgsql</span>
+<span class="var">DB_HOST</span>=<span class="str">db.xxxxxxxxxxxx.supabase.co</span>   <span class="cm"># your Supabase host</span>
+<span class="var">DB_PORT</span>=<span class="str">5432</span>
+<span class="var">DB_DATABASE</span>=<span class="str">postgres</span>
+<span class="var">DB_USERNAME</span>=<span class="str">postgres</span>
+<span class="var">DB_PASSWORD</span>=<span class="str">your-database-password</span>        <span class="cm"># the password you set in Step 1</span>
+<span class="var">DB_SSLMODE</span>=<span class="str">require</span>                         <span class="cm"># Supabase requires SSL</span></pre>
+            </div>
+
+            <h3 style="color:var(--accent-green);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 5 — Update config/database.php for SSL</h3>
+            <p style="color:var(--text-muted);margin-bottom:12px;">
+              Supabase enforces SSL connections. You need to pass the SSL mode in the pgsql driver options:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">config/database.php — pgsql section</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="str">'pgsql'</span> => [
+    <span class="str">'driver'</span>   => <span class="str">'pgsql'</span>,
+    <span class="str">'host'</span>     => <span class="fn">env</span>(<span class="str">'DB_HOST'</span>, <span class="str">'127.0.0.1'</span>),
+    <span class="str">'port'</span>     => <span class="fn">env</span>(<span class="str">'DB_PORT'</span>, <span class="str">'5432'</span>),
+    <span class="str">'database'</span> => <span class="fn">env</span>(<span class="str">'DB_DATABASE'</span>, <span class="str">'postgres'</span>),
+    <span class="str">'username'</span> => <span class="fn">env</span>(<span class="str">'DB_USERNAME'</span>, <span class="str">'postgres'</span>),
+    <span class="str">'password'</span> => <span class="fn">env</span>(<span class="str">'DB_PASSWORD'</span>, <span class="str">''</span>),
+    <span class="str">'charset'</span>  => <span class="str">'utf8'</span>,
+    <span class="str">'prefix'</span>   => <span class="str">''</span>,
+    <span class="str">'schema'</span>   => <span class="str">'public'</span>,
+    <span class="str">'sslmode'</span>  => <span class="fn">env</span>(<span class="str">'DB_SSLMODE'</span>, <span class="str">'require'</span>),  <span class="cm">// ← add this</span>
+],</pre>
+            </div>
+
+            <h3 style="color:var(--accent-green);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 6 — Test the Connection</h3>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — test & migrate</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Clear cached config first:</span>
+<span class="t-prompt">$</span> php artisan config:clear
+
+<span class="cm"># Test the connection:</span>
+<span class="t-prompt">$</span> php artisan db:show
+
+<span class="cm"># Run your migrations against Supabase:</span>
+<span class="t-prompt">$</span> php artisan migrate
+
+<span class="t-success">INFO  Running migrations.</span>
+<span class="t-success">✓  2024_01_01_000000_create_users_table ............... 312ms DONE</span>
+<span class="t-success">✓  2024_01_01_000001_create_categories_table ......... 298ms DONE</span>
+<span class="t-success">✓  2024_01_01_000002_create_products_table ........... 301ms DONE</span></pre>
+            </div>
+
+            <div class="info-box info-box--tip" style="margin-top:16px;">
+              <div class="info-box__icon">✅</div>
+              <div class="info-box__text">
+                After migrations run, open your <strong>Supabase Dashboard → Table Editor</strong> — you'll see your
+                <code>users</code>, <code>products</code>, and <code>categories</code> tables appear there in real time.
+                All Eloquent queries, relationships, and seeders work exactly the same — only the DB engine changed.
+              </div>
+            </div>
+
+            <h3 style="color:var(--accent-green);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 7 — Using Supabase Storage for File Uploads (Optional)</h3>
+            <p style="color:var(--text-muted);margin-bottom:12px;">
+              Supabase also provides S3-compatible object storage. Install the Flysystem S3 adapter to use it
+              as Laravel's disk driver — perfect for storing product images.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — install S3 adapter</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> composer require league/flysystem-aws-s3-v3</pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">.env — Supabase Storage config</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Supabase Storage credentials (Project Settings → API → S3 Connection)</span>
+<span class="var">FILESYSTEM_DISK</span>=<span class="str">s3</span>
+<span class="var">AWS_ACCESS_KEY_ID</span>=<span class="str">your-supabase-access-key</span>
+<span class="var">AWS_SECRET_ACCESS_KEY</span>=<span class="str">your-supabase-secret</span>
+<span class="var">AWS_DEFAULT_REGION</span>=<span class="str">ap-southeast-1</span>             <span class="cm"># match your Supabase region</span>
+<span class="var">AWS_BUCKET</span>=<span class="str">your-bucket-name</span>
+<span class="var">AWS_ENDPOINT</span>=<span class="str">https://xxxxxxxxxxxx.supabase.co/storage/v1/s3</span>
+<span class="var">AWS_USE_PATH_STYLE_ENDPOINT</span>=<span class="str">true</span></pre>
+            </div>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">PHP — upload a product image to Supabase Storage</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm">// In your ProductController store() method:</span>
+<span class="kw">if</span> (<span class="var">$request</span>-><span class="fn">hasFile</span>(<span class="str">'image'</span>)) {
+    <span class="var">$path</span> = <span class="var">$request</span>-><span class="fn">file</span>(<span class="str">'image'</span>)-><span class="fn">store</span>(<span class="str">'products'</span>, <span class="str">'s3'</span>);
+    <span class="var">$imageUrl</span> = <span class="cl">Storage</span>::<span class="fn">disk</span>(<span class="str">'s3'</span>)-><span class="fn">url</span>(<span class="var">$path</span>);
+}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 9 — FIREBASE -->
+        <div class="step reveal" id="firebase">
+          <div class="step__num">9</div>
+          <div class="step__content">
+            <h2 class="step__title">Connect Laravel to Firebase</h2>
+            <p class="step__desc">
+              Firebase is Google's platform offering a real-time NoSQL database (Firestore),
+              Authentication, Cloud Storage, and more. Laravel connects to Firebase via the
+              <strong>kreait/laravel-firebase</strong> package — the official, actively maintained SDK.
+            </p>
+
+            <div class="info-box info-box--tip">
+              <div class="info-box__icon">💡</div>
+              <div class="info-box__text">
+                <strong>When to use Firebase vs MySQL:</strong> Use Firebase for real-time features
+                (live chat, notifications, live inventory), and keep MySQL/Supabase for your main
+                relational data. They can coexist in the same Laravel project.
+              </div>
+            </div>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 1 — Create a Firebase Project</h3>
+            <ol style="color:var(--text-muted);line-height:2;padding-left:20px;">
+              <li>Go to <code>console.firebase.google.com</code> → sign in with Google.</li>
+              <li>Click <strong>Add project</strong> → name it (e.g. <code>laravel-shop</code>).</li>
+              <li>Disable Google Analytics if you don't need it → click <strong>Create project</strong>.</li>
+              <li>Once created, click <strong>Continue</strong> to enter your project dashboard.</li>
+            </ol>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 2 — Generate a Service Account Key</h3>
+            <ol style="color:var(--text-muted);line-height:2;padding-left:20px;">
+              <li>In Firebase Console → click the ⚙️ gear icon → <strong>Project settings</strong>.</li>
+              <li>Go to the <strong>Service accounts</strong> tab.</li>
+              <li>Click <strong>Generate new private key</strong> → confirm → a JSON file downloads.</li>
+              <li>Rename the file to <code>firebase-credentials.json</code> and move it to your Laravel project root (same folder as <code>.env</code>).</li>
+            </ol>
+
+            <div class="info-box" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.3);margin-top:4px;">
+              <div class="info-box__icon">⚠️</div>
+              <div class="info-box__text">
+                <strong>Never commit this file to Git!</strong> Add it to your <code>.gitignore</code> immediately:
+                <code>echo "firebase-credentials.json" >> .gitignore</code>
+              </div>
+            </div>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 3 — Install the Firebase SDK</h3>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">bash — install kreait/laravel-firebase</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="t-prompt">$</span> composer require kreait/laravel-firebase
+
+<span class="cm"># Publish the config file:</span>
+<span class="t-prompt">$</span> php artisan vendor:publish --provider="Kreait\Laravel\Firebase\ServiceProvider"
+
+<span class="t-success">INFO  Publishing assets.</span>
+<span class="t-success">✓  config/firebase.php ......................... published</span></pre>
+            </div>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 4 — Configure .env for Firebase</h3>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">.env</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="cm"># Firebase credentials — point to your service account JSON</span>
+<span class="var">FIREBASE_CREDENTIALS</span>=<span class="str">firebase-credentials.json</span>   <span class="cm"># relative to project root</span>
+<span class="var">FIREBASE_DATABASE_URL</span>=<span class="str">https://your-project-id-default-rtdb.firebaseio.com</span>
+<span class="cm"># Find DATABASE_URL in Firebase Console → Realtime Database → Data tab</span></pre>
+            </div>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 5 — Enable Firestore in Firebase Console</h3>
+            <ol style="color:var(--text-muted);line-height:2;padding-left:20px;">
+              <li>In Firebase Console → left sidebar → <strong>Firestore Database</strong>.</li>
+              <li>Click <strong>Create database</strong> → choose <strong>Start in test mode</strong> (for development).</li>
+              <li>Select a Cloud Firestore location → click <strong>Enable</strong>.</li>
+            </ol>
+
+            <div class="info-box info-box--tip" style="margin-top:4px;">
+              <div class="info-box__icon">📌</div>
+              <div class="info-box__text">
+                <strong>Test mode</strong> allows all reads/writes for 30 days — fine for development.
+                Before going live, set up proper <strong>Security Rules</strong> in the Firestore console.
+              </div>
+            </div>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 6 — Use Firestore in Laravel</h3>
+            <p style="color:var(--text-muted);margin-bottom:12px;">
+              Inject the <code>FirestoreClient</code> into any controller. Here's a complete CRUD example
+              using a <code>notifications</code> collection:
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">app/Http/Controllers/NotificationController.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">namespace</span> <span class="cl">App\Http\Controllers</span>;
+
+<span class="kw">use</span> <span class="cl">Illuminate\Http\Request</span>;
+<span class="kw">use</span> <span class="cl">Kreait\Firebase\Contract\Firestore</span>;
+
+<span class="kw">class</span> <span class="cl">NotificationController</span> <span class="kw">extends</span> <span class="cl">Controller</span>
+{
+    <span class="kw">public function</span> <span class="fn">__construct</span>(<span class="kw">protected</span> <span class="cl">Firestore</span> <span class="var">$firestore</span>) {}
+
+    <span class="cm">// CREATE — add a notification document</span>
+    <span class="kw">public function</span> <span class="fn">store</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+    {
+        <span class="var">$db</span> = <span class="var">$this</span>-><span class="var">firestore</span>-><span class="fn">database</span>();
+
+        <span class="var">$db</span>-><span class="fn">collection</span>(<span class="str">'notifications'</span>)-><span class="fn">add</span>([
+            <span class="str">'user_id'</span>    => <span class="fn">auth</span>()-><span class="fn">id</span>(),
+            <span class="str">'message'</span>    => <span class="var">$request</span>-><span class="fn">input</span>(<span class="str">'message'</span>),
+            <span class="str">'is_read'</span>    => <span class="kw">false</span>,
+            <span class="str">'created_at'</span> => <span class="fn">now</span>()-><span class="fn">toIso8601String</span>(),
+        ]);
+
+        <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([<span class="str">'status'</span> => <span class="str">'created'</span>]);
+    }
+
+    <span class="cm">// READ — fetch all notifications for current user</span>
+    <span class="kw">public function</span> <span class="fn">index</span>()
+    {
+        <span class="var">$db</span> = <span class="var">$this</span>-><span class="var">firestore</span>-><span class="fn">database</span>();
+
+        <span class="var">$docs</span> = <span class="var">$db</span>-><span class="fn">collection</span>(<span class="str">'notifications'</span>)
+            -><span class="fn">where</span>(<span class="str">'user_id'</span>, <span class="str">'='</span>, <span class="fn">auth</span>()-><span class="fn">id</span>())
+            -><span class="fn">documents</span>();
+
+        <span class="var">$data</span> = [];
+        <span class="kw">foreach</span> (<span class="var">$docs</span> <span class="kw">as</span> <span class="var">$doc</span>) {
+            <span class="var">$data</span>[] = [<span class="str">'id'</span> => <span class="var">$doc</span>-><span class="fn">id</span>()] + <span class="var">$doc</span>-><span class="fn">data</span>();
+        }
+
+        <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>(<span class="var">$data</span>);
+    }
+
+    <span class="cm">// UPDATE — mark a notification as read</span>
+    <span class="kw">public function</span> <span class="fn">markRead</span>(<span class="var">$id</span>)
+    {
+        <span class="var">$db</span> = <span class="var">$this</span>-><span class="var">firestore</span>-><span class="fn">database</span>();
+
+        <span class="var">$db</span>-><span class="fn">collection</span>(<span class="str">'notifications'</span>)
+            -><span class="fn">document</span>(<span class="var">$id</span>)
+            -><span class="fn">update</span>([[<span class="str">'path'</span> => <span class="str">'is_read'</span>, <span class="str">'value'</span> => <span class="kw">true</span>]]);
+
+        <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([<span class="str">'status'</span> => <span class="str">'updated'</span>]);
+    }
+
+    <span class="cm">// DELETE — remove a document</span>
+    <span class="kw">public function</span> <span class="fn">destroy</span>(<span class="var">$id</span>)
+    {
+        <span class="var">$db</span> = <span class="var">$this</span>-><span class="var">firestore</span>-><span class="fn">database</span>();
+
+        <span class="var">$db</span>-><span class="fn">collection</span>(<span class="str">'notifications'</span>)
+            -><span class="fn">document</span>(<span class="var">$id</span>)
+            -><span class="fn">delete</span>();
+
+        <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([<span class="str">'status'</span> => <span class="str">'deleted'</span>]);
+    }
+}</pre>
+            </div>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 7 — Register Routes</h3>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">routes/web.php</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">use</span> <span class="cl">App\Http\Controllers\NotificationController</span>;
+
+<span class="cl">Route</span>::<span class="fn">middleware</span>(<span class="str">'auth'</span>)-><span class="fn">group</span>(<span class="kw">function</span> () {
+    <span class="cl">Route</span>::<span class="fn">get</span>(<span class="str">'/notifications'</span>,              [<span class="cl">NotificationController</span>::<span class="kw">class</span>, <span class="str">'index'</span>]);
+    <span class="cl">Route</span>::<span class="fn">post</span>(<span class="str">'/notifications'</span>,             [<span class="cl">NotificationController</span>::<span class="kw">class</span>, <span class="str">'store'</span>]);
+    <span class="cl">Route</span>::<span class="fn">patch</span>(<span class="str">'/notifications/{id}/read'</span>,  [<span class="cl">NotificationController</span>::<span class="kw">class</span>, <span class="str">'markRead'</span>]);
+    <span class="cl">Route</span>::<span class="fn">delete</span>(<span class="str">'/notifications/{id}'</span>,      [<span class="cl">NotificationController</span>::<span class="kw">class</span>, <span class="str">'destroy'</span>]);
+});</pre>
+            </div>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 8 — Use Firebase Realtime Database (Optional)</h3>
+            <p style="color:var(--text-muted);margin-bottom:12px;">
+              For true real-time syncing (e.g. live stock updates, order status), use the Realtime Database instead of Firestore.
+              It pushes changes to all connected clients instantly.
+            </p>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">PHP — Realtime Database read & write</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">use</span> <span class="cl">Kreait\Firebase\Contract\Database</span>;
+
+<span class="kw">class</span> <span class="cl">StockController</span> <span class="kw">extends</span> <span class="cl">Controller</span>
+{
+    <span class="kw">public function</span> <span class="fn">__construct</span>(<span class="kw">protected</span> <span class="cl">Database</span> <span class="var">$database</span>) {}
+
+    <span class="cm">// Write — update product stock in real time</span>
+    <span class="kw">public function</span> <span class="fn">updateStock</span>(<span class="var">$productId</span>, <span class="var">$newStock</span>)
+    {
+        <span class="var">$this</span>-><span class="var">database</span>
+            -><span class="fn">getReference</span>(<span class="str">"products/{$productId}/stock"</span>)
+            -><span class="fn">set</span>(<span class="var">$newStock</span>);
+    }
+
+    <span class="cm">// Read — get current stock value</span>
+    <span class="kw">public function</span> <span class="fn">getStock</span>(<span class="var">$productId</span>)
+    {
+        <span class="var">$snapshot</span> = <span class="var">$this</span>-><span class="var">database</span>
+            -><span class="fn">getReference</span>(<span class="str">"products/{$productId}/stock"</span>)
+            -><span class="fn">getSnapshot</span>();
+
+        <span class="kw">return</span> <span class="fn">response</span>()-><span class="fn">json</span>([<span class="str">'stock'</span> => <span class="var">$snapshot</span>-><span class="fn">getValue</span>()]);
+    }
+}</pre>
+            </div>
+
+            <h3 style="color:var(--accent-yellow);font-family:var(--font-mono);font-size:1rem;margin:28px 0 12px;">Step 9 — Use Firebase Storage for File Uploads (Optional)</h3>
+
+            <div class="code-block">
+              <div class="code-block__header">
+                <span class="code-block__lang">PHP — upload to Firebase Storage</span>
+                <button class="code-block__copy">Copy</button>
+              </div>
+              <pre><span class="kw">use</span> <span class="cl">Kreait\Firebase\Contract\Storage</span>;
+
+<span class="kw">class</span> <span class="cl">ProductController</span> <span class="kw">extends</span> <span class="cl">Controller</span>
+{
+    <span class="kw">public function</span> <span class="fn">__construct</span>(<span class="kw">protected</span> <span class="cl">Storage</span> <span class="var">$storage</span>) {}
+
+    <span class="kw">public function</span> <span class="fn">store</span>(<span class="cl">Request</span> <span class="var">$request</span>)
+    {
+        <span class="var">$file</span>   = <span class="var">$request</span>-><span class="fn">file</span>(<span class="str">'image'</span>);
+        <span class="var">$bucket</span> = <span class="var">$this</span>-><span class="var">storage</span>-><span class="fn">getBucket</span>();
+
+        <span class="cm">// Upload to Firebase Storage</span>
+        <span class="var">$object</span> = <span class="var">$bucket</span>-><span class="fn">upload</span>(
+            <span class="fn">fopen</span>(<span class="var">$file</span>-><span class="fn">getRealPath</span>(), <span class="str">'r'</span>),
+            [<span class="str">'name'</span> => <span class="str">'products/'</span> . <span class="var">$file</span>-><span class="fn">getClientOriginalName</span>()]
+        );
+
+        <span class="cm">// Get the public URL</span>
+        <span class="var">$imageUrl</span> = <span class="str">'https://storage.googleapis.com/'</span>
+            . <span class="var">$bucket</span>-><span class="fn">name</span>()
+            . <span class="str">'/'</span>
+            . <span class="var">$object</span>-><span class="fn">name</span>();
+
+        <span class="cm">// Save product with image URL to MySQL</span>
+        <span class="cl">Product</span>::<span class="fn">create</span>([
+            <span class="str">'name'</span>  => <span class="var">$request</span>-><span class="fn">input</span>(<span class="str">'name'</span>),
+            <span class="str">'image'</span> => <span class="var">$imageUrl</span>,
+        ]);
+    }
+}</pre>
+            </div>
+
+            <table class="compare-table" style="margin-top:28px;">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Supabase</th>
+                  <th>Firebase</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Database type</td>
+                  <td>PostgreSQL (relational)</td>
+                  <td>Firestore / RTDB (NoSQL)</td>
+                </tr>
+                <tr>
+                  <td>Works with Eloquent</td>
+                  <td><span style="color:var(--accent-green)">✓ Full support</span></td>
+                  <td><span style="color:var(--accent-yellow)">SDK only (no Eloquent)</span></td>
+                </tr>
+                <tr>
+                  <td>Real-time updates</td>
+                  <td>Via Supabase Realtime (websockets)</td>
+                  <td><span style="color:var(--accent-green)">✓ Native (RTDB)</span></td>
+                </tr>
+                <tr>
+                  <td>Laravel migrations</td>
+                  <td><span style="color:var(--accent-green)">✓ Works normally</span></td>
+                  <td>Not applicable (schema-less)</td>
+                </tr>
+                <tr>
+                  <td>File storage</td>
+                  <td>S3-compatible</td>
+                  <td>Google Cloud Storage</td>
+                </tr>
+                <tr>
+                  <td>Free tier</td>
+                  <td>500MB DB + 2GB bandwidth</td>
+                  <td>1GB storage + 10GB/month</td>
+                </tr>
+                <tr>
+                  <td>Best for</td>
+                  <td>Drop-in MySQL/Postgres replacement</td>
+                  <td>Real-time features, notifications</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
